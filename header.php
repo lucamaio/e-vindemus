@@ -9,9 +9,10 @@
 <body <?php body_class(); ?>>
 <?php wp_body_open(); ?>
 
+<?php $ev_alert_options = ev_get_home_alert_options(); ?>
 <header class="ev-header" role="banner">
-  <div class="ev-header__topbar">
-    <p>🚚 Spedizione gratuita sopra i 59€ · Resi entro 30 giorni</p>
+  <div class="ev-header__topbar ev-header__topbar--<?php echo esc_attr($ev_alert_options['color']); ?>">
+    <p><?php echo esc_html($ev_alert_options['message']); ?></p>
     <a href="#">Supporto clienti</a>
   </div>
 
