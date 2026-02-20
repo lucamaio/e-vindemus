@@ -10,7 +10,7 @@
             <div class="row">
                 <div class="footer-bottom text-center py-4">
                     <!-- Scritta statica temporanea -->
-                    <p style="font-size:16px; color:#333;">Questa è una scritta statica di test per il footer.</p>
+                    <p style="font-size:16px; color:#fff;"  >Questa è una scritta statica di test per il footer.</p>
                     <a href="wp-login.php" class="btn btn-primary">Accedi al gestionale</a>
                 </div>
             </div>
