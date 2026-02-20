@@ -1,6 +1,7 @@
 <?php
 
 require_once get_template_directory() . '/inc/activation.php';
+require_once get_template_directory() . '/inc/admin/option/theme-options.php';
 
 /**
  * Setup base del tema.
