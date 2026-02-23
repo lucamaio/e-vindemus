@@ -8,6 +8,7 @@ function ev_get_home_alert_options() {
     $defaults = [
         'message' => '🚚 Spedizione gratuita sopra i 59€ · Resi entro 30 giorni',
         'color'   => 'blue',
+        'show'    => false,
     ];
 
     $saved_options = get_option('ev_home_alert_options', []);

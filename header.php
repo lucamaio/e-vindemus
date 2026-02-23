@@ -49,9 +49,8 @@
         'menu_class'     => 'ev-header__menu',
         'fallback_cb'    => static function () {
           echo '<ul class="ev-header__menu">';
-          echo '<li><a href="#">Novità</a></li>';
-          echo '<li><a href="#">Donna</a></li>';
-          echo '<li><a href="#">Uomo</a></li>';
+          echo '<li><a href="#">Pokemon</a></li>';
+          echo '<li><a href="#">Abigliamento</a></li>';
           echo '<li><a href="#">Accessori</a></li>';
           echo '<li><a href="#">Offerte</a></li>';
           echo '</ul>';
@@ -59,6 +58,6 @@
       ]);
       ?>
     </nav>
-    <a class="ev-header__promo" href="#">🔥 Flash Deals fino al -40%</a>
+    <!-- <a class="ev-header__promo" href="#">🔥 Flash Deals fino al -40%</a> -->
   </div>
 </header>
