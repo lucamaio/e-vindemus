@@ -1,4 +1,4 @@
-<section class="ev-home" aria-label="Contenuto principale della homepage">
+<section class="ev-home" aria-label="News e promozioni in evidenza">
     <section class="ev-hero" aria-label="Galleria principale con promozioni e novità">
         <div class="ev-hero__image-wrap">
             <img

@@ -1,6 +1,15 @@
 <?php
 
+// Includo il file di attivazione del tema, che gestisce setup iniziale e bootstrap post-attivazione.
+
 require_once get_template_directory() . '/inc/activation.php';
+
+// Includo tutte le tassonomie e tipologie del tema
+require_once get_template_directory() . '/inc/admin/tassonomie.php';
+
+require_once get_template_directory() . '/inc/admin/tipologie.php';
+
+// includo tutte le opzioni del tema
 require_once get_template_directory() . '/inc/admin/option/theme-options.php';
 
 /**
