@@ -23,6 +23,7 @@ body {
 /* ==============================
    Header E-commerce Moderno
    ============================== */
+   
 .ev-header {
     position: sticky;
     top: 0;
@@ -43,21 +44,23 @@ body {
     color: #f8fafc;
 }
 
-.ev-header__topbar--yellow {
+.ev-header__topbar--yellow {ev-hero__image-wrap
     background: #facc15;
     color: #1f2937;
 }
 
 .ev-header__topbar--blue {
-    background: linear-gradient(90deg, #0f172a, #1d4ed8);
+    background: linear-gradient(90deg, #142241, #1d4ed8);
 }
 
 .ev-header__topbar--red {
-    background: #dc2626;
+    /* background: #dc2626; */
+    background: linear-gradient(90deg, #6a0606, #dc2626);
 }
 
 .ev-header__topbar--green {
-    background: #16a34a;
+    /* background: #16a34a; */
+    background: linear-gradient(90deg, #136531, #16a34a);
 }
 
 .ev-header__topbar p {
@@ -106,7 +109,7 @@ body {
     width: 12px;
     height: 32px;
     border-radius: 999px;
-    background: linear-gradient(180deg, #2563eb, #7c3aed);
+    background: linear-gradient(180deg, #2563eb, #22069e);
 }
 
 .ev-header__search {
@@ -217,7 +220,7 @@ body {
 }
 
 /* ==============================
-   Footer Moderno
+   Stile Footer old
    ============================== */
 .it-footer {
     background-color: #1f2937;
@@ -330,7 +333,7 @@ body {
 
 .ev-hero__image-wrap {
     position: relative;
-    border-radius: 24px;
+    border-radius: 12px;
     overflow: hidden;
     min-height: 460px;
     box-shadow: 0 24px 44px rgba(15, 23, 42, 0.22);
@@ -510,4 +513,29 @@ body {
     .ev-products__grid {
         grid-template-columns: 1fr;
     }
+}
+
+
+/*
+    stile Footer moderno
+*/
+
+.footer-app {
+    background: #033a87;
+    color: #fff;
+    padding: 2rem 1rem;
+    width: 100%;
+    margin-top: 0 !important;
+}
+
+.footer-app .footer-link {
+    color: #fff;
+    text-decoration: none;
+    margin: 0 8px;
+    transition: color 0.2s ease;
+}
+
+.footer-app .footer-link:hover {
+    color: #fff;
+    text-decoration: underline;
 }
