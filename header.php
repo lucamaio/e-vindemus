@@ -11,10 +11,12 @@
 
 <?php $ev_alert_options = ev_get_home_alert_options(); ?>
 <header class="ev-header" role="banner">
+  <?php if ($ev_alert_options['show'] && !empty($ev_alert_options['message'])) : ?>
   <div class="ev-header__topbar ev-header__topbar--<?php echo esc_attr($ev_alert_options['color']); ?>">
     <p><?php echo esc_html($ev_alert_options['message']); ?></p>
     <a href="#">Supporto clienti</a>
   </div>
+  <?php endif; ?>
 
   <div class="ev-header__main">
     <a class="ev-header__brand" href="<?php echo esc_url(home_url('/')); ?>" aria-label="Torna alla homepage">

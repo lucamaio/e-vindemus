@@ -36,14 +36,14 @@ function ev_register_home_alert_settings() {
     add_settings_section(
         'ev_home_alert_section',
         'Messaggio alert homepage',
-        'ev_home_alert_section_description',
+        'ev_home_alert_section_description', // Callback per la descrizione della sezione
         'ev-home-alert-options'
     );
 
     add_settings_field(
         'ev_home_alert_message',
         'Testo messaggio',
-        'ev_home_alert_message_field',
+        'ev_home_alert_message_field',  // Callback per il campo del messaggio
         'ev-home-alert-options',
         'ev_home_alert_section'
     );
@@ -51,7 +51,15 @@ function ev_register_home_alert_settings() {
     add_settings_field(
         'ev_home_alert_color',
         'Colore alert',
-        'ev_home_alert_color_field',
+        'ev_home_alert_color_field', // Callback per il campo del colore
+        'ev-home-alert-options',
+        'ev_home_alert_section'
+    );
+
+    add_settings_field(
+        'ev_home_show_msg',
+        'Mostra messaggio alert',
+        'ev_home_alert_show_msg_field', // Callback per il campo di visualizzazione del messaggio
         'ev-home-alert-options',
         'ev_home_alert_section'
     );
@@ -71,9 +79,12 @@ function ev_sanitize_home_alert_options($input) {
         $color = $input['color'];
     }
 
+    $show = isset($input['show']) ? (bool) $input['show'] : false;
+
     return [
         'message' => $message,
         'color'   => $color,
+        'show'    => $show,
     ];
 }
 
@@ -113,6 +124,20 @@ function ev_home_alert_color_field() {
     <?php
 }
 
+function ev_home_alert_show_msg_field() {
+    $options = ev_get_home_alert_options();
+    ?>
+    <label>
+        <input
+            type="checkbox"
+            name="ev_home_alert_options[show]"
+            value="1"
+            <?php checked($options['show'], true); ?>
+        >
+        Mostra messaggio alert
+    </label>
+    <?php
+}
 function ev_add_home_alert_options_page() {
     add_theme_page(
         'Opzioni Homepage',
