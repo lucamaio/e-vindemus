@@ -328,3 +328,42 @@ function dci_prodotto_set_post_content( $data ) {
 
     return $data;
 }
+
+/**
+ * Rende più prevedibili i controlli permessi per i prodotti.
+ *
+ * Alcuni plugin di gestione ruoli assegnano solamente i permessi principali
+ * (es. edit_prodotti) e non quelli derivati da stato/autore
+ * (es. edit_published_prodotti, edit_others_prodotti). In questo modo,
+ * l'utente riesce a creare il prodotto ma non ad aggiornarlo una volta salvato.
+ *
+ * Qui mappiamo i meta-cap del singolo prodotto ai permessi principali,
+ * evitando blocchi in aggiornamento quando il ruolo è già abilitato alla
+ * gestione della tipologia.
+ */
+add_filter('map_meta_cap', 'dci_map_meta_cap_prodotto', 10, 4);
+function dci_map_meta_cap_prodotto($caps, $cap, $user_id, $args) {
+    if (empty($args[0]) || !in_array($cap, array('edit_prodotto', 'delete_prodotto', 'read_prodotto'), true)) {
+        return $caps;
+    }
+
+    $post = get_post((int) $args[0]);
+
+    if (!$post || $post->post_type !== 'prodotto') {
+        return $caps;
+    }
+
+    if ($cap === 'edit_prodotto') {
+        return array('edit_prodotti');
+    }
+
+    if ($cap === 'delete_prodotto') {
+        return array('delete_prodotti');
+    }
+
+    if ($cap === 'read_prodotto') {
+        return array('read');
+    }
+
+    return $caps;
+}
