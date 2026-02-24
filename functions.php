@@ -10,7 +10,7 @@ require_once get_template_directory() . '/inc/admin/tassonomie.php';
 require_once get_template_directory() . '/inc/admin/tipologie.php';
 
 // includo tutte le opzioni del tema
-require_once get_template_directory() . '/inc/admin/option/theme-options.php';
+require_once get_template_directory() . '/inc/admin/options.php';
 
 /**
  * Setup base del tema.
