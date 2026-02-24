@@ -48,9 +48,13 @@ function dci_register_tipologia_prodotto() {
     Aggiunfo i campi relativi alla tipologia "Prodotto". In questo caso, aggiungo un campo per il prezzo del prodotto.
 */
 
-add_action('add_meta_boxes', 'dci_add_prodotto_metaboxes');
+add_action('cmb2_admin_init', 'dci_add_prodotto_metaboxes');
 
 function dci_add_prodotto_metaboxes() {
+    if (!function_exists('new_cmb2_box')) {
+        return;
+    }
+
     $prefix = 'dci_prodotto_';
 
     // Aggiungo un metabox per il prezzo del prodotto
