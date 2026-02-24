@@ -12,9 +12,11 @@ function dci_register_homepage_options() {
         'id'           => $prefix . 'dci_homepage_options',
         'title'        => 'Opzioni homepage',
         'object_types' => array('page'), // Post type a cui associare le opzioni
-        'option_key'   => 'dci_homepage_options', // Chiave per salvare le opzioni nel database
+        'option_key'   => 'homepage', // Chiave per salvare le opzioni nel database
+        'capability'    => 'manage_options',
+        'parent_slug'  => 'dci_options',
         'tab_group'    => 'dci_options',
-        'tab_title'    => __('Home Page', "design_comuni_italia"),	
+        'tab_title'    => __('Home Page', "E-vindemus"),	
     );
 
 
