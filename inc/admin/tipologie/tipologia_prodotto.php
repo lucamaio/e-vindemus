@@ -25,23 +25,43 @@ function dci_register_tipologia_prodotto() {
     );
 
     $args = array(
+        'label'             => __('Prodotto', 'e-vindemus'),
         'labels'             => $labels,
+        'supports'          => array('title', 'editor', 'author'),
+        'hierarchical'      => false,
         'public'             => true,
         'publicly_queryable' => true,
         'show_ui'            => true,
         'show_in_menu'       => true,
         'query_var'          => true,
         'rewrite'            => array('slug' => 'prodotto'),
-        'capability_type'    => 'post',
-        'has_archive'       => true,
-        'hierarchical'      => false,
+        'capability_type'    => array('prodotto', 'prodotti'),
+        'capabilities' => array(
+            'edit_post' => 'edit_prodotto',
+            'read_post' => 'read_prodotto',
+            'delete_post' => 'delete_prodotto',
+            'edit_posts' => 'edit_prodotti',
+            'edit_others_posts' => 'edit_others_prodotti',
+            'publish_posts' => 'publish_prodotti',
+            'read_private_posts' => 'read_private_prodotti',
+            'delete_posts' => 'delete_prodotti',
+            'delete_private_posts' => 'delete_private_prodotti',
+            'delete_published_posts' => 'delete_published_prodotti',
+            'delete_others_posts' => 'delete_others_prodotti',
+            'edit_private_posts' => 'edit_private_prodotti',
+            'edit_published_posts' => 'edit_published_prodotti',
+            'create_posts' => 'create_prodotti'
+        ),
+        'has_archive'       => false,
         'menu_position'     => 5,
-        // Aggiungo il supporto per l'immagine in evidenza
-        'supports'          => array('title', 'editor', 'thumbnail'),
-        'menu_icon'     => 'dashicons-products', // Icona del menu (puoi scegliere un'icona diversa da https://developer.wordpress.org/resource/dashicons/#cart)
+        'map_meta_cap'       => true, 
+        'menu_icon'     => 'dashicons-products', // Icona del menu (puoi scegliere un'icona diversa da https://developer.wordpress.org/resource/dashicons/#cart),
+        'description'     => __('Tipologia per gestire i prodotti del nostro e-commerce.', 'e-vindemus')
     );
 
     register_post_type('prodotto', $args);
+
+    remove_post_type_support('prodotto', 'editor'); // Rimuovo l'editor classico per i prodotti, in quanto utilizzeremo i campi custom per gestire le informazioni del prodotto.
 }
 
 /*
@@ -55,7 +75,40 @@ function dci_add_prodotto_metaboxes() {
         return;
     }
 
-    $prefix = 'dci_prodotto_';
+    $prefix = '_dci_prodotto_';
+
+    // Metabox per le immagini del prodotto (es. galleria immagini, immagine in evidenza, ecc.)
+
+    $cmb_imgs = new_cmb2_box(array(
+        'id'            => $prefix . 'Immagini Prodotto',
+        'title'         => __('Immagini Prodotto', 'e-vindemus'),
+        'object_types'  => array('prodotto'), // Solo per la tipologia "Prodotto"
+    ));
+
+    $cmb_imgs->add_field(array(
+        'name' => 'Immagine in evidenza del prodotto *',
+        'id'   => $prefix . 'immagine_evidenza',
+        'type' => 'file',
+        'options' => array(
+            'url' => false, // Nascondi il campo URL
+        ),
+        'attributes'    => array(
+            'required'    => 'required',
+        ),
+        'preview_size' => array( 100, 100 ),
+        'query_args' => array( 'type' => 'image' ),
+    ));
+
+    $cmb_imgs->add_field(array(
+        'name' => 'Immagini del prodotto ',
+        'id'   => $prefix . 'galleria_immagini',
+        'type' => 'file_list',
+        'options' => array(
+            'url' => false, // Nascondi il campo URL
+        ),
+        'preview_size' => array( 100, 100 ),
+        'query_args' => array( 'type' => 'image' ),
+    ));
 
     // Aggiungo un metabox per il prezzo del prodotto
 
@@ -74,7 +127,8 @@ function dci_add_prodotto_metaboxes() {
         'type' => 'textarea',
         'attributes'    => array(
             'maxlength'  => '255',
-            'required'    => 'required'
+            'required'    => 'required', 
+            'width' => '100%',
         ),
         
     ));
@@ -110,24 +164,35 @@ function dci_add_prodotto_metaboxes() {
 
     $cmb_extra->add_field(array(
         'id'   => $prefix . 'specifiche_tecniche',
-        'name' => __('Specifiche Tecniche', 'e-vindemus'),
+        'name' => __('Specifiche Tecniche *', 'e-vindemus'),
         'desc' => __('Inserisci le specifiche tecniche del prodotto.', 'e-vindemus'),
-        'type' => 'textarea',
+        'type' => 'wysiwyg',
         'attributes'    => array(
-            'rows' => '5',
-            'required'    => 'required'
-        )
+            'required'    => 'required',
+            'width' => '100%',
+        ),
+        'options' => array(
+            'textarea_rows' => 10,
+            'media_buttons' => false, // Nascondi il pulsante per aggiungere media
+            'teeny'         => false, // Usa la versione completa dell'editor
+        ),
     ));
 
     $cmb_extra->add_field(array(
         'id'   => $prefix . 'descrizioni',
-        'name' => __('Descrizioni', 'e-vindemus'),
+        'name' => __('Descrizioni *', 'e-vindemus'),
         'desc' => __('Inserisci una descrizione dettagliata del prodotto.', 'e-vindemus'),
-        'type' => 'textarea',
+        'type' => 'wysiwyg',
         'attributes'    => array(
-            'rows' => '5',
-            'required'    => 'required'
-        )
+            'required'    => 'required',
+            'width' => '100%',
+            'min-length' => '20', // Lunghezza minima della descrizione dettagliata
+        ),
+        'options' => array(
+            'textarea_rows' => 10,
+            'media_buttons' => false, // Nascondi il pulsante per aggiungere media
+            'teeny'         => false, // Usa la versione completa dell'editor
+        ),
     ));
 
     // CAMPO DA RIVEDERE: per ora non è necessario, ma in futuro potrebbe essere utile per gestire le domande frequenti relative al prodotto (FAQ)
@@ -145,24 +210,33 @@ function dci_add_prodotto_metaboxes() {
 
     $cmb_extra->add_field(array(
         'id'   => $prefix . 'recesso_garanzia',
-        'name' => __('Recesso e Garanzia', 'e-vindemus'),
+        'name' => __('Recesso e Garanzia *', 'e-vindemus'),
         'desc' => __('Inserisci le informazioni relative al recesso e alla garanzia del prodotto. Questa parte è fondamentale per non incorere in sanzioni legali.', 'e-vindemus'),
-        'type' => 'textarea',
+        'type' => 'wysiwyg',
         'attributes'    => array(
-            'rows' => '5',
-            'required'    => 'required'
-        )
+            'required'    => 'required',
+            'width' => '100%',
+        ),
+        'options' => array(
+            'textarea_rows' => 5,
+            'media_buttons' => false, // Nascondi il pulsante per aggiungere media
+            'teeny'         => false, // Usa la versione completa dell'editor
+        ),
     ));
 
     $cmb_extra->add_field(array(
         'id'   => $prefix . 'altre_informazioni',
         'name' => __('Altre Informazioni', 'e-vindemus'),
         'desc' => __('Inserisci eventuali altre informazioni rilevanti relative al prodotto.', 'e-vindemus'),
-        'type' => 'textarea',
+        'type' => 'wysiwyg',
         'attributes'    => array(
-            'rows' => '5',
-            'required'    => 'required'
-        )
+            'width' => '100%',
+        ),
+        'options' => array(
+            'textarea_rows' => 10,
+            'media_buttons' => false, // Nascondi il pulsante per aggiungere media
+            'teeny'         => false, // Usa la versione completa dell'editor
+        ),
     ));
 
     // Sezione Relativo alla gestione dello stock del prodotto (es. quantità disponibile, gestione magazzino, ecc.)
@@ -181,7 +255,6 @@ function dci_add_prodotto_metaboxes() {
         'desc' => __('Inserisci la quantità disponibile in stock per questo prodotto.', 'e-vindemus'),
         'type' => 'text_small',
         'attributes'    => array(
-            'required'    => 'required',
             'pattern'     => '\d+', // Validazione per numeri interi
             'title'       => 'Inserisci una quantità valida (numeri interi)',
             'min'         => '0' // Quantità minima accettabile fissata a 0
@@ -219,3 +292,39 @@ function dci_add_prodotto_metaboxes() {
 }
 
 // Aggiugere degli script che verificano se i campi sono compilati in modo giusto.
+
+
+/**
+ * Valorizzo il post content in base al contenuto dei campi custom
+ * @param $data
+ * @return mixed
+ */
+
+add_filter( 'wp_insert_post_data', 'dci_prodotto_set_post_content', 99, 2 );
+function dci_prodotto_set_post_content( $data ) {
+
+    if($data['post_type'] == 'prodotto') {
+
+        $descrizione_breve = '';
+        if (isset($_POST['_dci_prodotto_descrizione_breve'])) {
+            $descrizione_breve = $_POST['_dci_prodotto_descrizione_breve'];
+        }
+
+        $descrizione_estesa = '';
+        if (isset($_POST['_dci_prodotto_descrizioni'])) {
+            $descrizione_estesa = $_POST['_dci_prodotto_descrizioni'];
+        }
+
+        $prezzo = '';
+        if (isset($_POST['_dci_prodotto_prezzo'])) {
+            $prezzo = $_POST['_dci_prodotto_prezzo'];
+        }
+
+
+        $content = $descrizione_breve.'<br>'.$descrizione_estesa.'<br>Prezzo: '.$prezzo;
+
+        $data['post_content'] = $content;
+    }
+
+    return $data;
+}
