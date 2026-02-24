@@ -1,73 +1,58 @@
 <?php
 
+/**
+ * Registra la pagina opzioni homepage (CMB2).
+ */
 function dci_register_homepage_options() {
-   
+    if (!function_exists('new_cmb2_box')) {
+        return;
+    }
+
     $prefix = '';
 
-    /*
-        Opzioni homepage
-    */
-
-    $args = array(
+    $args = [
         'id'           => $prefix . 'dci_homepage_options',
-        'title'        => 'Opzioni homepage',
-        'object_types' => array('page'), // Post type a cui associare le opzioni
-        'option_key'   => 'homepage', // Chiave per salvare le opzioni nel database
-        'capability'    => 'manage_options',
-        'parent_slug'  => 'dci_options',
-        'tab_group'    => 'dci_options',
-        'tab_title'    => __('Home Page', "E-vindemus"),	
-    );
+        'title'        => __('Opzioni homepage', 'E-vindemus'),
+        'object_types' => ['options-page'],
+        'option_key'   => 'homepage',
+        'capability'   => 'manage_options',
+        'parent_slug'  => 'themes.php',
+        'menu_title'   => __('Opzioni homepage', 'E-vindemus'),
+        'tab_title'    => __('Home page', 'E-vindemus'),
+    ];
 
+    $home_options = new_cmb2_box($args);
 
-    // Aggiungo i campi per le opzioni della homepage
+    $home_options->add_field([
+        'name'       => __('Titolo sito *', 'E-vindemus'),
+        'desc'       => __('Inserisci il titolo mostrato nella homepage.', 'E-vindemus'),
+        'id'         => $prefix . 'home_site_title',
+        'type'       => 'text',
+        'default'    => 'E-vindemus',
+        'attributes' => [
+            'required'    => 'required',
+            'aria-required' => 'true',
+        ],
+    ]);
 
-    $home_options = new_cmb2_box( $args );
-    
-    // Campo Nome sito
-    $home_options->add_field( array(
-        'name' => 'Titolo sito *',
-        'id'   => $prefix . 'home_site_title',
-        'type' => 'text',
-        'default' => 'E-vindemus',
-        'attributes' => array(
-            'required' => 'required',
-        ),
-    ) );
+    $home_options->add_field([
+        'name'    => __('Motto sito', 'E-vindemus'),
+        'desc'    => __('Breve descrizione del negozio mostrata nella homepage.', 'E-vindemus'),
+        'id'      => $prefix . 'home_site_motto',
+        'type'    => 'text',
+        'default' => __('Il tuo negozio di vini online', 'E-vindemus'),
+    ]);
 
-    // Campo motto sito
-    $home_options->add_field( array(
-        'name' => 'Motto sito',
-        'id'   => $prefix . 'home_site_motto',
-        'type' => 'text',
-        'default' => 'Il tuo negozio di vini online',
-    ) );
-
-    // Campo Immagini carousel
-    $home_options->add_field( array(
-        'name' => 'Immagini carousel',
-        'id'   => $prefix . 'home_carousel_images',
-        'type' => 'file_list',
-        'options' => array(
-            'url' => false, // Nascondi il campo URL
-        ),
-        'preview_size' => array( 100, 100 ),
-        'query_args' => array( 'type' => 'image' ),
-    ) );
-
-    // Campo Articoli in evidenza (relazione con post)
-    // $home_options->add_field( array(
-    //     'name' => 'Articoli in evidenza',
-    //     'id'   => $prefix . 'home_featured_posts',
-    //     'type' => 'post_search_text',
-    //     'post_type' => array('post'), // Solo post standard
-    //     'select_type' => 'checkbox', // Permette di selezionare più articoli
-    // ) );
-
-
-
-
+    $home_options->add_field([
+        'name'         => __('Immagini carousel', 'E-vindemus'),
+        'desc'         => __('Carica immagini con testo alternativo per migliorare l’accessibilità.', 'E-vindemus'),
+        'id'           => $prefix . 'home_carousel_images',
+        'type'         => 'file_list',
+        'options'      => [
+            'url' => false,
+        ],
+        'preview_size' => [100, 100],
+        'query_args'   => ['type' => 'image'],
+    ]);
 }
-
-
-?>
+add_action('cmb2_admin_init', 'dci_register_homepage_options');
