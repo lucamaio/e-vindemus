@@ -96,13 +96,17 @@ function ev_home_alert_section_description() {
 function ev_home_alert_message_field() {
     $options = ev_get_home_alert_options();
     ?>
+    <label class="screen-reader-text" for="ev_home_alert_message_input">Testo messaggio</label>
     <input
+        id="ev_home_alert_message_input"
         type="text"
         class="regular-text"
         name="ev_home_alert_options[message]"
         value="<?php echo esc_attr($options['message']); ?>"
         placeholder="Inserisci il messaggio da mostrare in alto"
+        aria-describedby="ev-home-alert-message-help"
     >
+    <p id="ev-home-alert-message-help" class="description">Il testo viene mostrato nella barra superiore della homepage.</p>
     <?php
 }
 
@@ -115,7 +119,8 @@ function ev_home_alert_color_field() {
         'green'  => 'Verde',
     ];
     ?>
-    <select name="ev_home_alert_options[color]">
+    <label class="screen-reader-text" for="ev_home_alert_color_select">Colore alert</label>
+    <select id="ev_home_alert_color_select" name="ev_home_alert_options[color]">
         <?php foreach ($colors as $value => $label) : ?>
             <option value="<?php echo esc_attr($value); ?>" <?php selected($options['color'], $value); ?>>
                 <?php echo esc_html($label); ?>
@@ -128,8 +133,9 @@ function ev_home_alert_color_field() {
 function ev_home_alert_show_msg_field() {
     $options = ev_get_home_alert_options();
     ?>
-    <label>
+    <label for="ev_home_alert_show_msg_checkbox">
         <input
+            id="ev_home_alert_show_msg_checkbox"
             type="checkbox"
             name="ev_home_alert_options[show]"
             value="1"
