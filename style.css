@@ -451,7 +451,7 @@ body {
     height: 100%;
     background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
     border: 1px solid #e2e8f0;
-    border-radius: 20px;
+    border-radius: 12px;
     overflow: hidden;
     box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
     transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
@@ -469,7 +469,7 @@ body {
 }
 
 .ev-product-card__thumb {
-    border-radius: 14px;
+    border-radius: 12px;
     height: 190px;
     background-size: cover;
     background-position: center;
@@ -657,7 +657,7 @@ body {
 
 .ev-single-product__thumb {
     margin: 0;
-    border-radius: 12px;
+    border-radius: 8px;
     overflow: hidden;
     border: 1px solid #e2e8f0;
 }
@@ -694,7 +694,7 @@ body {
 .ev-single-product__purchase-box {
     margin-top: 24px;
     padding: 20px;
-    border-radius: 16px;
+    border-radius: 12px;
     background: #ffffff;
     border: 1px solid #e2e8f0;
     box-shadow: 0 14px 28px rgba(15, 23, 42, 0.06);
@@ -750,7 +750,7 @@ body {
 .ev-single-product__card {
     background: #fff;
     border: 1px solid #e2e8f0;
-    border-radius: 14px;
+    border-radius: 12px;
     padding: 18px;
 }
 
