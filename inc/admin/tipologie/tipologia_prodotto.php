@@ -133,19 +133,23 @@ function dci_add_prodotto_metaboxes() {
         
     ));
    
-    $cmb_info->add_field(array(
-        'id'   => $prefix . 'prezzo',
-        'name' => __('Prezzo', 'e-vindemus'),
-        'desc' => __('Inserisci il prezzo del prodotto in formato decimale (es. 19.99).', 'e-vindemus'),
-        'type' => 'text_money',
-        'before_field' => '€',
-        'attributes'    => array(
-            'required'    => 'required',
-            'pattern'     => '\d+(\.\d{2})?', // Validazione per formato prezzo (es. 19.99)
-            'title'       => 'Inserisci un prezzo valido (es. 19.99)',
-            'min'         => '0.99' // Prezzo minimo accettabile fissato a 0.99€
-        ),
-    ));
+    $cmb_info->add_field( array(
+    'id'           => $prefix . 'prezzo',
+    'name'         => __( 'Prezzo', 'e-vindemus' ),
+    'desc'         => __( 'Inserisci il prezzo del prodotto in formato decimale (es. 19.99).', 'e-vindemus' ),
+    'type'         => 'text_money',
+    'before_field' => '€',
+    'attributes'   => array(
+        'required' => 'required',
+        'min'      => '0',
+        'step'     => '0.01',
+        'type'     => 'number',
+        'inputmode'=> 'decimal',
+        'pattern'  => '^\d+(\.\d{1,2})?$',
+    ),
+    'sanitization_cb' => 'floatval',
+    'escape_cb'       => 'esc_html',
+) );
 
     // Aggiungo un metabox per la disponibilità del prodotto
     // $cmb_disponibilita = new_cmb2_box(array(
