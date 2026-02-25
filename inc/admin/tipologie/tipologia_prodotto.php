@@ -133,23 +133,21 @@ function dci_add_prodotto_metaboxes() {
         
     ));
    
-    $cmb_info->add_field( array(
-    'id'           => $prefix . 'prezzo',
-    'name'         => __( 'Prezzo', 'e-vindemus' ),
-    'desc'         => __( 'Inserisci il prezzo del prodotto in formato decimale (es. 19.99).', 'e-vindemus' ),
-    'type'         => 'text_money',
-    'before_field' => '€',
-    'attributes'   => array(
-        'required' => 'required',
-        'min'      => '0',
-        'step'     => '0.01',
-        'type'     => 'number',
-        'inputmode'=> 'decimal',
-        'pattern'  => '^\d+(\.\d{1,2})?$',
-    ),
-    'sanitization_cb' => 'floatval',
-    'escape_cb'       => 'esc_html',
-) );
+    $cmb_info->add_field(array(
+        'id'              => $prefix . 'prezzo',
+        'name'            => __('Prezzo', 'e-vindemus'),
+        'desc'            => __('Inserisci il prezzo del prodotto in formato decimale (es. 19.99 o 19,99).', 'e-vindemus'),
+        'type'            => 'text',
+        'before_field'    => '€',
+        'attributes'      => array(
+            'required'  => 'required',
+            'inputmode' => 'decimal',
+            'pattern'   => '^\d+([\.,]\d{1,2})?$',
+            'title'     => __('Inserisci un valore valido (es. 19.99 o 19,99).', 'e-vindemus'),
+        ),
+        'sanitization_cb' => 'dci_sanitize_prezzo_prodotto',
+        'escape_cb'       => 'dci_escape_prezzo_prodotto',
+    ));
 
     // Aggiungo un metabox per la disponibilità del prodotto
     // $cmb_disponibilita = new_cmb2_box(array(
@@ -370,4 +368,40 @@ function dci_map_meta_cap_prodotto($caps, $cap, $user_id, $args) {
     }
 
     return $caps;
+}
+
+/**
+ * Sanifica il prezzo prodotto mantenendo il valore decimale con punto.
+ *
+ * @param mixed $value
+ * @return string
+ */
+function dci_sanitize_prezzo_prodotto($value) {
+    if (!is_scalar($value)) {
+        return '';
+    }
+
+    $value = trim((string) $value);
+
+    if ($value === '') {
+        return '';
+    }
+
+    $value = str_replace(',', '.', $value);
+
+    if (!preg_match('/^\d+(\.\d{1,2})?$/', $value)) {
+        return '';
+    }
+
+    return $value;
+}
+
+/**
+ * Escape del prezzo prodotto nei campi admin.
+ *
+ * @param mixed $value
+ * @return string
+ */
+function dci_escape_prezzo_prodotto($value) {
+    return esc_attr((string) $value);
 }
