@@ -25,7 +25,15 @@ get_header();
             $altre_info        = get_post_meta(get_the_ID(), $prefix . 'altre_informazioni', true);
             $stock             = get_post_meta(get_the_ID(), $prefix . 'quantita_disponibile', true);
 
-            $price_formatted = $price !== '' ? number_format((float) str_replace(',', '.', $price), 2, ',', '.') : null;
+            $price_formatted = null;
+            if ($price !== '') {
+                $price_normalized = str_replace(',', '.', (string) $price);
+
+                if (is_numeric($price_normalized)) {
+                    $price_value = (float) $price_normalized;
+                    $price_formatted = rtrim(rtrim(number_format($price_value, 2, ',', '.'), '0'), ',');
+                }
+            }
             $stock_qty       = is_numeric($stock) ? (int) $stock : null;
             $in_stock        = null !== $stock_qty ? $stock_qty > 0 : null;
             ?>
