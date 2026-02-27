@@ -242,6 +242,25 @@ function dci_rollback_page_sync_changes($modified_pages, $created_page_ids) {
             wp_trash_post($post_id);
         }
     }
+
+    return true;
+}
+
+/**
+ * Recupera una pagina per slug anche se cestinata.
+ *
+ * @param string $slug Slug della pagina.
+ * @return WP_Post|null
+ */
+function dci_get_page_by_slug_including_trashed($slug) {
+    $pages = get_posts([
+        'post_type'      => 'page',
+        'name'           => $slug,
+        'post_status'    => 'any',
+        'posts_per_page' => 1,
+    ]);
+
+    return isset($pages[0]) && $pages[0] instanceof WP_Post ? $pages[0] : null;
 }
 
 /**
