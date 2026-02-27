@@ -34,6 +34,12 @@ function dci_reload_theme_components($reset_options = false) {
 function dci_theme_activation() {
     dci_reload_theme_components();
 
+    // inserisco i termini di tassonomia
+    insertCustomTaxonomyTerms();
+
+    // Aggiorno le descrizioni delle tassonomie per eventuali modifiche
+    updateCategorieDescription();
+
     // Flag utile per eventuali bootstrap post-attivazione.
     update_option('dci_theme_just_activated', 1);
 }
@@ -125,3 +131,41 @@ function dci_handle_theme_reload_request() {
     exit;
 }
 add_action('admin_post_dci_reload_theme_components', 'dci_handle_theme_reload_request');
+
+
+/**
+ * Funzione responsabile dell'inserimento dei termini di tassonomia personalizzati.
+ */
+
+function insertCustomTaxonomyTerms() {
+   /**
+    * Categorie prodotti
+    */
+
+   $categorie_array = dci_categorie_prodotti_array();
+   recursionInsertTaxonomy($categorie_array, 'categoria_prodotto');
+
+}
+
+/**
+ * inserimento ricorsivo dei termini di tassonomia
+ * @param $array
+ * @param $tax_name
+ * @param null $parent_id
+ */
+function recursionInsertTaxonomy($array, $tax_name, $parent_id = null) {
+    foreach ($array as $key => $value) {
+        if (!is_numeric($key)) { //se NON è numerico, ha dei figli
+            if (!term_exists( $key , $tax_name)) {
+                $parent = $parent_id !== null ? wp_insert_term( $key, $tax_name, array("parent" => $parent_id)) : wp_insert_term( $key, $tax_name );
+                if(is_array($parent)){
+                    recursionInsertTaxonomy($value, $tax_name, $parent['term_taxonomy_id']);
+                }
+            } else {
+                //se il padre esiste già ma il figlio no (get id del padre in base al termine...)
+            }
+        } else {
+            $parent_id !== null ? wp_insert_term( $value, $tax_name, array("parent" => $parent_id)) : wp_insert_term( $value, $tax_name);
+        }
+    }
+}

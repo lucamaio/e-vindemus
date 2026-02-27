@@ -1,16 +1,20 @@
 <?php
 
+// Includo il file del vocabolario, che contiene funzioni per recuperare array di categorie e termini personalizzati.
+
+require_once get_template_directory() . '/inc/vocabolario.php';
+
 // Includo il file di attivazione del tema, che gestisce setup iniziale e bootstrap post-attivazione.
 
 require_once get_template_directory() . '/inc/activation.php';
+
+// includo tutte le opzioni del tema
+require_once get_template_directory() . '/inc/admin/options.php';
 
 // Includo tutte le tassonomie e tipologie del tema
 require_once get_template_directory() . '/inc/admin/tassonomie.php';
 
 require_once get_template_directory() . '/inc/admin/tipologie.php';
-
-// includo tutte le opzioni del tema
-require_once get_template_directory() . '/inc/admin/options.php';
 
 /**
  * Setup base del tema.

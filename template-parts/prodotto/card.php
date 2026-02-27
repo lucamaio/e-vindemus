@@ -55,10 +55,10 @@ if (empty($immagine) || !filter_var($immagine, FILTER_VALIDATE_URL)) {
         </div>
 
         <div class="ev-product-card__body">
-            <p class="ev-product-card__type">
+            <!-- <p class="ev-product-card__type">
                 <span>Tipologia prodotto:</span>
-                <?php echo esc_html($tipologia); ?>
-            </p>
+                <?php // echo esc_html($tipologia); ?>
+            </p> -->
 
             <h3><?php echo esc_html($titolo); ?></h3>
 

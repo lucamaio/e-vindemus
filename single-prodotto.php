@@ -14,16 +14,22 @@ get_header();
             <?php
             $prefix = '_dci_prodotto_';
 
-            $featured_image = get_post_meta(get_the_ID(), $prefix . 'immagine_evidenza', true);
-            $gallery_images = get_post_meta(get_the_ID(), $prefix . 'galleria_immagini', true);
+            $prodotto_id = get_the_ID();
+            $titolo     = get_the_title($prodotto_id);
 
-            $price             = get_post_meta(get_the_ID(), $prefix . 'prezzo', true);
-            $short_description = get_post_meta(get_the_ID(), $prefix . 'descrizione_breve', true);
-            $specifiche        = get_post_meta(get_the_ID(), $prefix . 'specifiche_tecniche', true);
-            $descrizioni       = get_post_meta(get_the_ID(), $prefix . 'descrizioni', true);
-            $recesso           = get_post_meta(get_the_ID(), $prefix . 'recesso_garanzia', true);
-            $altre_info        = get_post_meta(get_the_ID(), $prefix . 'altre_informazioni', true);
-            $stock             = get_post_meta(get_the_ID(), $prefix . 'quantita_disponibile', true);
+            $featured_image = get_post_meta($prodotto_id, $prefix . 'immagine_evidenza', true);
+            $gallery_images = get_post_meta($prodotto_id, $prefix . 'galleria_immagini', true);
+
+            $price             = get_post_meta($prodotto_id, $prefix . 'prezzo', true);
+            $short_description = get_post_meta($prodotto_id, $prefix . 'descrizione_breve', true);
+            $specifiche        = get_post_meta($prodotto_id, $prefix . 'specifiche_tecniche', true);
+            $descrizioni       = get_post_meta($prodotto_id, $prefix . 'descrizioni', true);
+            $recesso           = get_post_meta($prodotto_id, $prefix . 'recesso_garanzia', true);
+            $altre_info        = get_post_meta($prodotto_id, $prefix . 'altre_informazioni', true);
+            $stock             = get_post_meta($prodotto_id, $prefix . 'quantita_disponibile', true);
+
+            $category_terms = get_the_terms($prodotto_id, 'categoria_prodotto') ?: [];
+            // var_dump($category_terms); // Debug: mostra le categorie del prodotto    
 
             $price_formatted = null;
             if ($price !== '') {
@@ -38,14 +44,14 @@ get_header();
             $in_stock        = null !== $stock_qty ? $stock_qty > 0 : null;
             ?>
 
-            <article id="post-<?php the_ID(); ?>" <?php post_class('ev-single-product__article'); ?>>
+            <article id="post-<?php echo esc_attr($prodotto_id); ?>" <?php post_class('ev-single-product__article'); ?> aria-label="Scheda Prodotto <?php echo esc_attr($titolo); ?>">
                 <div class="ev-single-product__media">
                     <div class="ev-single-product__hero-image-wrap">
                         <?php if (!empty($featured_image)) : ?>
                             <img
                                 class="ev-single-product__hero-image"
                                 src="<?php echo esc_url($featured_image); ?>"
-                                alt="<?php echo esc_attr(get_the_title()); ?>"
+                                alt="<?php echo esc_attr($titolo); ?>"
                             >
                         <?php elseif (has_post_thumbnail()) : ?>
                             <?php the_post_thumbnail('large', ['class' => 'ev-single-product__hero-image']); ?>
@@ -68,7 +74,26 @@ get_header();
                 </div>
 
                 <div class="ev-single-product__content">
-                    <p class="ev-single-product__eyebrow">Scheda prodotto</p>
+                    <p class="ev-single-product__eyebrow mb-2">
+                        Scheda prodotto
+                    </p>
+                    <?php if ($category_terms && !empty($category_terms) && is_array($category_terms)) { 
+                            $categorie_tot = count($category_terms);
+                            foreach ($category_terms as $category) { ?>
+                            <span class="ev-single-product__category mb-2" aria-label="Categoria prodotto">
+                                <?php echo esc_html($category->name); ?>
+                                <?php if ($categorie_tot > 1) { echo ','; } 
+                                $categorie_tot--;  // diminuisco il contatore per sapere quando non mettere la virgola alla fine dell'ultimo elemento 
+                                
+                                ?>
+                                
+                            </span>
+                        <?php } 
+                    }else { ?>
+                        <span class="ev-single-product__category mb-2" aria-label="Categoria prodotto">
+                            Categoria non specificata
+                        </span> 
+                    <?php } ?>                    
                     <h1 class="ev-single-product__title"><?php the_title(); ?></h1>
 
                     <?php if (!empty($short_description)) : ?>

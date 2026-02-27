@@ -678,11 +678,21 @@ body {
     font-weight: 700;
 }
 
+.ev-single-product__category {
+    margin: 0;
+    color: #cf1d1d;
+    text-transform: uppercase;
+    font-size: 12px;
+    font-weight: 600;
+}
+
 .ev-single-product__title {
     margin: 8px 0 0;
     font-size: clamp(28px, 4vw, 42px);
     line-height: 1.15;
 }
+
+
 
 .ev-single-product__lead {
     margin: 16px 0 0;

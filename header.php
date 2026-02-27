@@ -49,7 +49,7 @@
         'menu_class'     => 'ev-header__menu',
         'fallback_cb'    => static function () {
           echo '<ul class="ev-header__menu">';
-          echo '<li><a href="#">Pokemon</a></li>';
+          echo '<li><a href="' . get_page_link(get_page_by_title('Pokemon')) . '">Pokemon</a></li>';
           echo '<li><a href="#">Abigliamento</a></li>';
           echo '<li><a href="#">Accessori</a></li>';
           echo '<li><a href="#">Offerte</a></li>';

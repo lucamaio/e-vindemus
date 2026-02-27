@@ -274,6 +274,15 @@ function dci_add_prodotto_metaboxes() {
 
     // DA IMPLEMENTARE: aggiungere un campo di selezione per la tipologia del prodotto (es. vino, accessorio, ecc.) in modo da poter categorizzare i prodotti in base alla loro tipologia specifica. Questo potrebbe essere implementato come un campo di selezione a discesa (dropdown) o come un set di checkbox, a seconda delle esigenze specifiche del progetto.
 
+    $cmb_tipo->add_field(array(
+        'id'   => $prefix . 'tipo_prodotto',
+        'name' => __('Tipo Prodotto *', 'e-vindemus'),
+        'desc' => __('Seleziona la tipologia del prodotto (es. T-shirt, maglietta, ecc.).', 'e-vindemus'),
+        'type' => 'taxonomy_multicheck_hierarchical',
+        'taxonomy' => 'categoria_prodotto', // Associa questo campo alla tassonomia "Categoria prodotto"
+        'show_option_none' => false,
+        'remove_default' => 'true'
+    ));
 
     // $cmb_tipo->add_field(array(
     //     'id'   => $prefix . 'tipo_prodotto',
