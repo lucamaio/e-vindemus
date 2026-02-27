@@ -794,3 +794,103 @@ body {
         grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 }
+
+/* ==============================
+   Pagina Pokemon
+   ============================== */
+.ev-pokemon {
+    gap: 28px;
+}
+
+.ev-pokemon__hero {
+    min-height: 400px;
+}
+
+.ev-pokemon__subcategories {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.ev-pokemon__subcategory-item {
+    border: 1px solid #cbd5e1;
+    background: #fff;
+    border-radius: 999px;
+    padding: 8px 14px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.ev-pokemon__filter-form {
+    display: grid;
+    gap: 16px;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 18px;
+}
+
+.ev-pokemon__label,
+.ev-pokemon__fieldset legend {
+    font-size: 14px;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.ev-pokemon__filter-form input[type='search'] {
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 15px;
+}
+
+.ev-pokemon__fieldset {
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    margin: 0;
+    padding: 12px;
+}
+
+.ev-pokemon__checkboxes {
+    margin-top: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.ev-pokemon__checkbox-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #334155;
+}
+
+.ev-pokemon__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.ev-pokemon__actions .ev-btn--small {
+    width: auto;
+}
+
+.ev-pokemon__featured-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+@media (max-width: 1024px) {
+    .ev-pokemon__featured-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .ev-pokemon__featured-grid {
+        grid-template-columns: 1fr;
+    }
+}
