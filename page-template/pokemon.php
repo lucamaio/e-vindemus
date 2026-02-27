@@ -14,9 +14,8 @@ get_header(); ?>
                 <h2>Pokemon</h2>
                 <p>Esplora la nostra sezione dedicata al mondo pokemon.</p>
             </div>
-            <?php //get_template_part('template-parts/home/mostra-articoli', 'home'); ?>
             <div class ="ev-products__grid">
-                <?php get_template_part('template-parts/prodotto/card-list', 'home'); ?>
+                <?php get_template_part('template-parts/pokemon/card-list', 'home'); ?>
             </div>
           </section>
     </div>
