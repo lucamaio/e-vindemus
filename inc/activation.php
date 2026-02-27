@@ -190,6 +190,7 @@ function dci_create_pages_from_json_config() {
  * @param int $page_id ID pagina.
  * @return array<string,mixed>
  */
+if (!function_exists('dci_get_page_state_snapshot')) {
 function dci_get_page_state_snapshot($page_id) {
     $post = get_post($page_id);
 
@@ -205,6 +206,7 @@ function dci_get_page_state_snapshot($page_id) {
         'template' => (string) get_post_meta($post->ID, '_wp_page_template', true),
     ];
 }
+}
 
 /**
  * Effettua rollback compensativo su pagine modificate/create durante la sync.
@@ -213,6 +215,7 @@ function dci_get_page_state_snapshot($page_id) {
  * @param array<int,int>                 $created_page_ids IDs pagine create durante sync.
  * @return void
  */
+if (!function_exists('dci_rollback_page_sync_changes')) {
 function dci_rollback_page_sync_changes($modified_pages, $created_page_ids) {
     foreach ($created_page_ids as $created_page_id) {
         wp_delete_post((int) $created_page_id, true);
@@ -278,6 +281,26 @@ function dci_get_page_by_slug_including_trashed($slug) {
     ]);
 
     return isset($pages[0]) && $pages[0] instanceof WP_Post ? $pages[0] : null;
+}
+}
+
+/**
+ * Recupera una pagina per slug anche se cestinata.
+ *
+ * @param string $slug Slug della pagina.
+ * @return WP_Post|null
+ */
+if (!function_exists('dci_get_page_by_slug_including_trashed')) {
+function dci_get_page_by_slug_including_trashed($slug) {
+    $pages = get_posts([
+        'post_type'      => 'page',
+        'name'           => $slug,
+        'post_status'    => 'any',
+        'posts_per_page' => 1,
+    ]);
+
+    return isset($pages[0]) && $pages[0] instanceof WP_Post ? $pages[0] : null;
+}
 }
 
 /**
