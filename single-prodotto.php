@@ -20,6 +20,22 @@ get_header();
             $featured_image = get_post_meta($prodotto_id, $prefix . 'immagine_evidenza', true);
             $gallery_images = get_post_meta($prodotto_id, $prefix . 'galleria_immagini', true);
 
+            $image_set = [];
+
+            if (!empty($featured_image)) {
+                $image_set[] = $featured_image;
+            }
+
+            if (!empty($gallery_images) && is_array($gallery_images)) {
+                foreach ($gallery_images as $gallery_image) {
+                    if (!empty($gallery_image)) {
+                        $image_set[] = $gallery_image;
+                    }
+                }
+            }
+
+            $image_set = array_values(array_unique($image_set));
+
             $price             = get_post_meta($prodotto_id, $prefix . 'prezzo', true);
             $short_description = get_post_meta($prodotto_id, $prefix . 'descrizione_breve', true);
             $specifiche        = get_post_meta($prodotto_id, $prefix . 'specifiche_tecniche', true);
@@ -47,14 +63,23 @@ get_header();
             <article id="post-<?php echo esc_attr($prodotto_id); ?>" <?php post_class('ev-single-product__article'); ?> aria-label="Scheda Prodotto <?php echo esc_attr($titolo); ?>">
                 <div class="ev-single-product__media">
                     <div class="ev-single-product__hero-image-wrap">
-                        <?php if (!empty($featured_image)) : ?>
+                        <?php if (!empty($image_set)) : ?>
                             <img
                                 class="ev-single-product__hero-image"
-                                src="<?php echo esc_url($featured_image); ?>"
+                                src="<?php echo esc_url($image_set[0]); ?>"
                                 alt="<?php echo esc_attr($titolo); ?>"
+                                data-gallery-hero
                             >
+                            <?php if (count($image_set) > 1) : ?>
+                                <button class="ev-single-product__nav ev-single-product__nav--prev" type="button" aria-label="Immagine precedente" data-gallery-prev>
+                                    <span aria-hidden="true">&#10094;</span>
+                                </button>
+                                <button class="ev-single-product__nav ev-single-product__nav--next" type="button" aria-label="Immagine successiva" data-gallery-next>
+                                    <span aria-hidden="true">&#10095;</span>
+                                </button>
+                            <?php endif; ?>
                         <?php elseif (has_post_thumbnail()) : ?>
-                            <?php the_post_thumbnail('large', ['class' => 'ev-single-product__hero-image']); ?>
+                            <?php the_post_thumbnail('large', ['class' => 'ev-single-product__hero-image', 'data-gallery-hero' => '']); ?>
                         <?php else : ?>
                             <div class="ev-single-product__hero-placeholder" aria-hidden="true">
                                 <span>Anteprima prodotto</span>
@@ -62,11 +87,20 @@ get_header();
                         <?php endif; ?>
                     </div>
 
-                    <?php if (!empty($gallery_images) && is_array($gallery_images)) : ?>
+                    <?php if (!empty($image_set)) : ?>
                         <div class="ev-single-product__gallery" aria-label="Galleria immagini prodotto">
-                            <?php foreach ($gallery_images as $image_url) : ?>
+                            <?php foreach ($image_set as $index => $image_url) : ?>
                                 <figure class="ev-single-product__thumb">
-                                    <img src="<?php echo esc_url($image_url); ?>" alt="Dettaglio di <?php echo esc_attr(get_the_title()); ?>">
+                                    <button
+                                        class="ev-single-product__thumb-button <?php echo 0 === $index ? 'is-active' : ''; ?>"
+                                        type="button"
+                                        aria-label="Mostra immagine <?php echo esc_attr((string) ($index + 1)); ?>"
+                                        data-gallery-thumb
+                                        data-image-src="<?php echo esc_url($image_url); ?>"
+                                        data-image-index="<?php echo esc_attr((string) $index); ?>"
+                                    >
+                                        <img src="<?php echo esc_url($image_url); ?>" alt="Dettaglio di <?php echo esc_attr(get_the_title()); ?>">
+                                    </button>
                                 </figure>
                             <?php endforeach; ?>
                         </div>
@@ -160,6 +194,68 @@ get_header();
         </section>
     <?php endif; ?>
 </main>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var heroImage = document.querySelector('[data-gallery-hero]');
+        var thumbs = Array.prototype.slice.call(document.querySelectorAll('[data-gallery-thumb]'));
+        var prevButton = document.querySelector('[data-gallery-prev]');
+        var nextButton = document.querySelector('[data-gallery-next]');
+
+        if (!heroImage || thumbs.length === 0) {
+            return;
+        }
+
+        var activeIndex = 0;
+
+        var setActiveImage = function (index) {
+            if (index < 0) {
+                activeIndex = thumbs.length - 1;
+            } else if (index >= thumbs.length) {
+                activeIndex = 0;
+            } else {
+                activeIndex = index;
+            }
+
+            var selectedThumb = thumbs[activeIndex];
+            var selectedSrc = selectedThumb.getAttribute('data-image-src');
+
+            if (selectedSrc) {
+                heroImage.setAttribute('src', selectedSrc);
+            }
+
+            thumbs.forEach(function (thumb, thumbIndex) {
+                var isActive = thumbIndex === activeIndex;
+                thumb.classList.toggle('is-active', isActive);
+                thumb.setAttribute('aria-current', isActive ? 'true' : 'false');
+            });
+        };
+
+        thumbs.forEach(function (thumb) {
+            thumb.addEventListener('click', function () {
+                var imageIndex = parseInt(thumb.getAttribute('data-image-index'), 10);
+
+                if (!isNaN(imageIndex)) {
+                    setActiveImage(imageIndex);
+                }
+            });
+        });
+
+        if (prevButton) {
+            prevButton.addEventListener('click', function () {
+                setActiveImage(activeIndex - 1);
+            });
+        }
+
+        if (nextButton) {
+            nextButton.addEventListener('click', function () {
+                setActiveImage(activeIndex + 1);
+            });
+        }
+
+        setActiveImage(0);
+    });
+</script>
 
 <?php
 get_footer();
