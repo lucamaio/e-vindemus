@@ -8,6 +8,7 @@
  * - opzioni di configurazione (opzionale reset default)
  *
  * @param bool $reset_options Se true, reimposta le opzioni principali ai valori di default.
+ * @return array{templates_synced:bool,errors:array<int,string>,rolled_back:bool}
  */
 function dci_reload_theme_components($reset_options = false) {
     set_time_limit(400);
@@ -15,6 +16,7 @@ function dci_reload_theme_components($reset_options = false) {
     $report = [
         'templates_synced' => false,
         'errors'           => [],
+        'rolled_back'      => false,
     ];
 
     // Inserisco i termini di tassonomia solo se la funzione esiste.
@@ -22,7 +24,10 @@ function dci_reload_theme_components($reset_options = false) {
         insertCustomTaxonomyTerms();
     }
 
-    $report['templates_synced'] = dci_create_pages_from_json_config();
+    $pages_sync_report = dci_create_pages_from_json_config();
+    $report['templates_synced'] = !empty($pages_sync_report['success']);
+    $report['errors'] = !empty($pages_sync_report['errors']) ? $pages_sync_report['errors'] : [];
+    $report['rolled_back'] = !empty($pages_sync_report['rolled_back']);
 
     if ($reset_options) {
         update_option('ev_home_alert_options', [
@@ -92,21 +97,41 @@ function dci_get_pages_config_from_json() {
 }
 
 /**
- * Crea pagine da configurazione JSON una sola volta (se non già presenti).
+ * Crea/aggiorna pagine da configurazione JSON in modo idempotente.
+ * In caso di errore prova a ripristinare lo stato precedente.
+ *
+ * @return array{success:bool,errors:array<int,string>,rolled_back:bool}
  */
 function dci_create_pages_from_json_config() {
     $pages = dci_get_pages_config_from_json();
 
     if (empty($pages)) {
-        return false;
+        return [
+            'success'     => false,
+            'errors'      => ['Nessuna pagina valida trovata nella configurazione JSON.'],
+            'rolled_back' => false,
+        ];
     }
+
+    $modified_pages = [];
+    $created_page_ids = [];
 
     foreach ($pages as $page_data) {
         $existing_page = dci_get_page_by_slug_including_trashed($page_data['slug']);
 
         if ($existing_page instanceof WP_Post) {
+            $modified_pages[$existing_page->ID] = dci_get_page_state_snapshot($existing_page->ID);
+
             if ($existing_page->post_status === 'trash') {
-                wp_untrash_post($existing_page->ID);
+                $untrashed = wp_untrash_post($existing_page->ID);
+                if (!$untrashed) {
+                    dci_rollback_page_sync_changes($modified_pages, $created_page_ids);
+                    return [
+                        'success'     => false,
+                        'errors'      => ["Impossibile ripristinare la pagina cestinata '{$page_data['slug']}'."],
+                        'rolled_back' => true,
+                    ];
+                }
             }
 
             $updated_page = wp_update_post([
@@ -116,7 +141,12 @@ function dci_create_pages_from_json_config() {
             ], true);
 
             if (is_wp_error($updated_page)) {
-                continue;
+                dci_rollback_page_sync_changes($modified_pages, $created_page_ids);
+                return [
+                    'success'     => false,
+                    'errors'      => [$updated_page->get_error_message()],
+                    'rolled_back' => true,
+                ];
             }
 
             update_post_meta($existing_page->ID, '_wp_page_template', $page_data['template']);
@@ -128,14 +158,109 @@ function dci_create_pages_from_json_config() {
             'post_title'  => $page_data['name'],
             'post_name'   => $page_data['slug'],
             'post_status' => 'publish',
+        ], true);
+
+        if (is_wp_error($page_id) || $page_id <= 0) {
+            dci_rollback_page_sync_changes($modified_pages, $created_page_ids);
+            $error_message = is_wp_error($page_id)
+                ? $page_id->get_error_message()
+                : "Impossibile creare la pagina '{$page_data['slug']}'.";
+
+            return [
+                'success'     => false,
+                'errors'      => [$error_message],
+                'rolled_back' => true,
+            ];
+        }
+
+        $created_page_ids[] = (int) $page_id;
+        update_post_meta($page_id, '_wp_page_template', $page_data['template']);
+    }
+
+    return [
+        'success'     => true,
+        'errors'      => [],
+        'rolled_back' => false,
+    ];
+}
+
+/**
+ * Salva uno snapshot dello stato pagina prima della sincronizzazione.
+ *
+ * @param int $page_id ID pagina.
+ * @return array<string,mixed>
+ */
+function dci_get_page_state_snapshot($page_id) {
+    $post = get_post($page_id);
+
+    if (!$post instanceof WP_Post) {
+        return [];
+    }
+
+    return [
+        'ID'       => $post->ID,
+        'title'    => $post->post_title,
+        'slug'     => $post->post_name,
+        'status'   => $post->post_status,
+        'template' => (string) get_post_meta($post->ID, '_wp_page_template', true),
+    ];
+}
+
+/**
+ * Effettua rollback compensativo su pagine modificate/create durante la sync.
+ *
+ * @param array<int,array<string,mixed>> $modified_pages Snapshot pagine esistenti.
+ * @param array<int,int>                 $created_page_ids IDs pagine create durante sync.
+ * @return void
+ */
+function dci_rollback_page_sync_changes($modified_pages, $created_page_ids) {
+    foreach ($created_page_ids as $created_page_id) {
+        wp_delete_post((int) $created_page_id, true);
+    }
+
+    foreach ($modified_pages as $snapshot) {
+        if (empty($snapshot['ID'])) {
+            continue;
+        }
+
+        $post_id = (int) $snapshot['ID'];
+
+        wp_update_post([
+            'ID'         => $post_id,
+            'post_title' => isset($snapshot['title']) ? $snapshot['title'] : '',
+            'post_name'  => isset($snapshot['slug']) ? $snapshot['slug'] : '',
+            'post_status'=> 'publish',
         ]);
 
-        if (!is_wp_error($page_id) && $page_id > 0) {
-            update_post_meta($page_id, '_wp_page_template', $page_data['template']);
+        if (isset($snapshot['template']) && $snapshot['template'] !== '') {
+            update_post_meta($post_id, '_wp_page_template', $snapshot['template']);
+        } else {
+            delete_post_meta($post_id, '_wp_page_template');
+        }
+
+        if (isset($snapshot['status']) && $snapshot['status'] === 'trash') {
+            wp_trash_post($post_id);
         }
     }
 
     return true;
+}
+
+/**
+ * Recupera una pagina per slug anche se cestinata.
+ *
+ * @param string $slug Slug della pagina.
+ * @return WP_Post|null
+ */
+function dci_get_page_by_slug_including_trashed($slug) {
+    $pages = get_posts([
+        'post_type'      => 'page',
+        'name'           => $slug,
+        'post_status'    => 'any',
+        'posts_per_page' => 1,
+    ]);
+
+    return isset($pages[0]) && $pages[0] instanceof WP_Post ? $pages[0] : null;
 }
 
 /**
@@ -206,6 +331,7 @@ function dci_render_theme_reload_page() {
     }
 
     $status = isset($_GET['dci_reload']) ? sanitize_text_field(wp_unslash($_GET['dci_reload'])) : '';
+    $error_message = isset($_GET['dci_reload_error']) ? sanitize_text_field(wp_unslash($_GET['dci_reload_error'])) : '';
     ?>
     <div class="wrap">
         <h1>Ricarica configurazione tema</h1>
@@ -213,7 +339,12 @@ function dci_render_theme_reload_page() {
         <?php if ($status === 'ok') : ?>
             <div class="notice notice-success is-dismissible"><p>Ricarica completata con successo.</p></div>
         <?php elseif ($status === 'ko') : ?>
-            <div class="notice notice-error is-dismissible"><p>Si è verificato un errore durante la ricarica.</p></div>
+            <div class="notice notice-error is-dismissible">
+                <p>Si è verificato un errore durante la ricarica. Le modifiche ai template sono state annullate.</p>
+                <?php if ($error_message !== '') : ?>
+                    <p><strong>Dettaglio:</strong> <?php echo esc_html($error_message); ?></p>
+                <?php endif; ?>
+            </div>
         <?php endif; ?>
 
         <p>Usa questa utility per ricaricare template, tipologie, tassonomie e opzioni principali del tema.</p>
@@ -251,10 +382,16 @@ function dci_handle_theme_reload_request() {
 
     $status = !empty($report['templates_synced']) ? 'ok' : 'ko';
 
-    $redirect_url = add_query_arg(
-        ['page' => 'dci-theme-reload', 'dci_reload' => $status],
-        admin_url('themes.php')
-    );
+    $query_args = [
+        'page'       => 'dci-theme-reload',
+        'dci_reload' => $status,
+    ];
+
+    if (!empty($report['errors'][0])) {
+        $query_args['dci_reload_error'] = $report['errors'][0];
+    }
+
+    $redirect_url = add_query_arg($query_args, admin_url('themes.php'));
 
     wp_safe_redirect($redirect_url);
     exit;
