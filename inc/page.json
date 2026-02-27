@@ -1,0 +1,12 @@
+[
+  {
+    "name": "Pokemon",
+    "slug": "pokemon",
+    "template": "page-template/pokemon.php"
+  },
+  {
+    "name": "Abbigliamento",
+    "slug": "abbigliamento",
+    "template": "page-template/abbigliamento-page.php"
+  }
+]

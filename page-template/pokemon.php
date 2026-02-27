@@ -1,7 +1,7 @@
 <?php
 /**
  * Template name: Pagina Pokemon
- * Template post type: prodotto
+ * Template Post Type: page
  */
 
 get_header(); ?>
@@ -21,3 +21,5 @@ get_header(); ?>
           </section>
     </div>
 </main>
+
+<?php get_footer();

@@ -17,6 +17,8 @@ function dci_reload_theme_components($reset_options = false) {
         insertCustomTaxonomyTerms();
     }
 
+    dci_create_pages_from_json_config();
+
     if ($reset_options) {
         update_option('ev_home_alert_options', [
             'message' => '🚚 Spedizione gratuita sopra i 59€ · Resi entro 30 giorni',
@@ -26,6 +28,90 @@ function dci_reload_theme_components($reset_options = false) {
     }
 
     flush_rewrite_rules(false);
+}
+
+/**
+ * Legge e valida la configurazione delle pagine da file JSON.
+ *
+ * @return array<int, array{name:string,slug:string,template:string}>
+ */
+function dci_get_pages_config_from_json() {
+    $json_file_path = get_template_directory() . '/inc/page.json';
+
+    if (!file_exists($json_file_path) || !is_readable($json_file_path)) {
+        return [];
+    }
+
+    $json_content = file_get_contents($json_file_path);
+
+    if ($json_content === false) {
+        return [];
+    }
+
+    $pages = json_decode($json_content, true);
+
+    if (!is_array($pages)) {
+        return [];
+    }
+
+    $valid_pages = [];
+
+    foreach ($pages as $page_data) {
+        if (!is_array($page_data)) {
+            continue;
+        }
+
+        $name     = isset($page_data['name']) ? sanitize_text_field($page_data['name']) : '';
+        $slug     = isset($page_data['slug']) ? sanitize_title($page_data['slug']) : '';
+        $template = isset($page_data['template']) ? sanitize_text_field($page_data['template']) : '';
+
+        if ($name === '' || $slug === '' || $template === '') {
+            continue;
+        }
+
+        $template_file = get_template_directory() . '/' . ltrim($template, '/');
+        if (!file_exists($template_file)) {
+            continue;
+        }
+
+        $valid_pages[] = [
+            'name'     => $name,
+            'slug'     => $slug,
+            'template' => ltrim($template, '/'),
+        ];
+    }
+
+    return $valid_pages;
+}
+
+/**
+ * Crea pagine da configurazione JSON una sola volta (se non già presenti).
+ */
+function dci_create_pages_from_json_config() {
+    $pages = dci_get_pages_config_from_json();
+
+    if (empty($pages)) {
+        return;
+    }
+
+    foreach ($pages as $page_data) {
+        $existing_page = get_page_by_path($page_data['slug'], OBJECT, 'page');
+
+        if ($existing_page instanceof WP_Post) {
+            continue;
+        }
+
+        $page_id = wp_insert_post([
+            'post_type'   => 'page',
+            'post_title'  => $page_data['name'],
+            'post_name'   => $page_data['slug'],
+            'post_status' => 'publish',
+        ]);
+
+        if (!is_wp_error($page_id) && $page_id > 0) {
+            update_post_meta($page_id, '_wp_page_template', $page_data['template']);
+        }
+    }
 }
 
 /**
