@@ -19,9 +19,12 @@ function dci_reload_theme_components($reset_options = false) {
         'rolled_back'      => false,
     ];
 
-    // Inserisco i termini di tassonomia solo se la funzione esiste.
     if (function_exists('insertCustomTaxonomyTerms')) {
         insertCustomTaxonomyTerms();
+    }
+
+    if (function_exists('updateCategorieDescription')) {
+        updateCategorieDescription();
     }
 
     $pages_sync_report = dci_create_pages_from_json_config();
@@ -55,13 +58,11 @@ function dci_get_pages_config_from_json() {
     }
 
     $json_content = file_get_contents($json_file_path);
-
     if ($json_content === false) {
         return [];
     }
 
     $pages = json_decode($json_content, true);
-
     if (!is_array($pages)) {
         return [];
     }
@@ -113,7 +114,7 @@ function dci_create_pages_from_json_config() {
         ];
     }
 
-    $modified_pages = [];
+    $modified_pages   = [];
     $created_page_ids = [];
 
     foreach ($pages as $page_data) {
@@ -191,21 +192,21 @@ function dci_create_pages_from_json_config() {
  * @return array<string,mixed>
  */
 if (!function_exists('dci_get_page_state_snapshot')) {
-function dci_get_page_state_snapshot($page_id) {
-    $post = get_post($page_id);
+    function dci_get_page_state_snapshot($page_id) {
+        $post = get_post($page_id);
 
-    if (!$post instanceof WP_Post) {
-        return [];
+        if (!$post instanceof WP_Post) {
+            return [];
+        }
+
+        return [
+            'ID'       => $post->ID,
+            'title'    => $post->post_title,
+            'slug'     => $post->post_name,
+            'status'   => $post->post_status,
+            'template' => (string) get_post_meta($post->ID, '_wp_page_template', true),
+        ];
     }
-
-    return [
-        'ID'       => $post->ID,
-        'title'    => $post->post_title,
-        'slug'     => $post->post_name,
-        'status'   => $post->post_status,
-        'template' => (string) get_post_meta($post->ID, '_wp_page_template', true),
-    ];
-}
 }
 
 /**
@@ -213,75 +214,41 @@ function dci_get_page_state_snapshot($page_id) {
  *
  * @param array<int,array<string,mixed>> $modified_pages Snapshot pagine esistenti.
  * @param array<int,int>                 $created_page_ids IDs pagine create durante sync.
- * @return void
+ * @return bool
  */
 if (!function_exists('dci_rollback_page_sync_changes')) {
-function dci_rollback_page_sync_changes($modified_pages, $created_page_ids) {
-    foreach ($created_page_ids as $created_page_id) {
-        wp_delete_post((int) $created_page_id, true);
+    function dci_rollback_page_sync_changes($modified_pages, $created_page_ids) {
+        foreach ($created_page_ids as $created_page_id) {
+            wp_delete_post((int) $created_page_id, true);
+        }
+
+        foreach ($modified_pages as $snapshot) {
+            if (empty($snapshot['ID'])) {
+                continue;
+            }
+
+            $post_id = (int) $snapshot['ID'];
+
+            wp_update_post([
+                'ID'          => $post_id,
+                'post_title'  => isset($snapshot['title']) ? $snapshot['title'] : '',
+                'post_name'   => isset($snapshot['slug']) ? $snapshot['slug'] : '',
+                'post_status' => 'publish',
+            ]);
+
+            if (isset($snapshot['template']) && $snapshot['template'] !== '') {
+                update_post_meta($post_id, '_wp_page_template', $snapshot['template']);
+            } else {
+                delete_post_meta($post_id, '_wp_page_template');
+            }
+
+            if (isset($snapshot['status']) && $snapshot['status'] === 'trash') {
+                wp_trash_post($post_id);
+            }
+        }
+
+        return true;
     }
-
-    foreach ($modified_pages as $snapshot) {
-        if (empty($snapshot['ID'])) {
-            continue;
-        }
-
-        $post_id = (int) $snapshot['ID'];
-
-        wp_update_post([
-            'ID'         => $post_id,
-            'post_title' => isset($snapshot['title']) ? $snapshot['title'] : '',
-            'post_name'  => isset($snapshot['slug']) ? $snapshot['slug'] : '',
-            'post_status'=> 'publish',
-        ]);
-
-        if (isset($snapshot['template']) && $snapshot['template'] !== '') {
-            update_post_meta($post_id, '_wp_page_template', $snapshot['template']);
-        } else {
-            delete_post_meta($post_id, '_wp_page_template');
-        }
-
-        if (isset($snapshot['status']) && $snapshot['status'] === 'trash') {
-            wp_trash_post($post_id);
-        }
-    }
-
-    return true;
-}
-
-/**
- * Recupera una pagina per slug anche se cestinata.
- *
- * @param string $slug Slug della pagina.
- * @return WP_Post|null
- */
-function dci_get_page_by_slug_including_trashed($slug) {
-    $pages = get_posts([
-        'post_type'      => 'page',
-        'name'           => $slug,
-        'post_status'    => 'any',
-        'posts_per_page' => 1,
-    ]);
-
-    return isset($pages[0]) && $pages[0] instanceof WP_Post ? $pages[0] : null;
-}
-
-/**
- * Recupera una pagina per slug anche se cestinata.
- *
- * @param string $slug Slug della pagina.
- * @return WP_Post|null
- */
-function dci_get_page_by_slug_including_trashed($slug) {
-    $pages = get_posts([
-        'post_type'      => 'page',
-        'name'           => $slug,
-        'post_status'    => 'any',
-        'posts_per_page' => 1,
-    ]);
-
-    return isset($pages[0]) && $pages[0] instanceof WP_Post ? $pages[0] : null;
-}
 }
 
 /**
@@ -291,16 +258,16 @@ function dci_get_page_by_slug_including_trashed($slug) {
  * @return WP_Post|null
  */
 if (!function_exists('dci_get_page_by_slug_including_trashed')) {
-function dci_get_page_by_slug_including_trashed($slug) {
-    $pages = get_posts([
-        'post_type'      => 'page',
-        'name'           => $slug,
-        'post_status'    => 'any',
-        'posts_per_page' => 1,
-    ]);
+    function dci_get_page_by_slug_including_trashed($slug) {
+        $pages = get_posts([
+            'post_type'      => 'page',
+            'name'           => $slug,
+            'post_status'    => 'any',
+            'posts_per_page' => 1,
+        ]);
 
-    return isset($pages[0]) && $pages[0] instanceof WP_Post ? $pages[0] : null;
-}
+        return isset($pages[0]) && $pages[0] instanceof WP_Post ? $pages[0] : null;
+    }
 }
 
 /**
@@ -308,12 +275,6 @@ function dci_get_page_by_slug_including_trashed($slug) {
  */
 function dci_theme_activation() {
     dci_reload_theme_components();
-
-    // inserisco i termini di tassonomia
-    insertCustomTaxonomyTerms();
-
-    // Aggiorno le descrizioni delle tassonomie per eventuali modifiche
-    updateCategorieDescription();
 
     // Flag utile per eventuali bootstrap post-attivazione.
     update_option('dci_theme_just_activated', 1);
@@ -348,6 +309,11 @@ function dci_register_theme_reload_page() {
 }
 add_action('admin_menu', 'dci_register_theme_reload_page');
 
+/**
+ * Render della pagina admin di ricarica.
+ *
+ * @return void
+ */
 function dci_render_theme_reload_page() {
     if (!current_user_can('manage_options')) {
         return;
@@ -421,30 +387,37 @@ function dci_handle_theme_reload_request() {
 }
 add_action('admin_post_dci_reload_theme_components', 'dci_handle_theme_reload_request');
 
-
 /**
- * Funzione responsabile dell'inserimento dei termini di tassonomia personalizzati.
+ * Inserisce (o aggiorna) i termini di tassonomia personalizzati.
+ *
+ * @return void
  */
-
 function insertCustomTaxonomyTerms() {
-   /**
-    * Categorie prodotti
-    */
-
-   $categorie_array = dci_categorie_prodotti_array();
-   recursionInsertTaxonomy($categorie_array, 'categoria_prodotto');
-
+    $categorie_array = dci_categorie_prodotti_array();
+    recursionInsertTaxonomy($categorie_array, 'categoria_prodotto');
 }
 
 /**
- * inserimento ricorsivo dei termini di tassonomia
- * @param $array
- * @param $tax_name
- * @param null $parent_id
+ * Aggiorna la descrizione delle categorie create dal vocabolario.
+ *
+ * @return void
+ */
+function updateCategorieDescription() {
+    $categorie_array = dci_categorie_prodotti_array();
+    dci_update_categoria_description_recursive($categorie_array, 'categoria_prodotto');
+}
+
+/**
+ * Inserimento ricorsivo dei termini di tassonomia.
+ *
+ * @param array<int|string,mixed> $array
+ * @param string                  $tax_name
+ * @param int|null                $parent_id
+ * @return void
  */
 function recursionInsertTaxonomy($array, $tax_name, $parent_id = null) {
     foreach ($array as $key => $value) {
-        if (!is_numeric($key)) { //se NON è numerico, ha dei figli
+        if (!is_numeric($key)) {
             $existing_parent = term_exists($key, $tax_name);
 
             if ($existing_parent) {
@@ -453,7 +426,10 @@ function recursionInsertTaxonomy($array, $tax_name, $parent_id = null) {
                 continue;
             }
 
-            $parent = $parent_id !== null ? wp_insert_term($key, $tax_name, ['parent' => $parent_id]) : wp_insert_term($key, $tax_name);
+            $parent = $parent_id !== null
+                ? wp_insert_term($key, $tax_name, ['parent' => $parent_id])
+                : wp_insert_term($key, $tax_name);
+
             if (is_wp_error($parent)) {
                 continue;
             }
@@ -461,12 +437,54 @@ function recursionInsertTaxonomy($array, $tax_name, $parent_id = null) {
             if (is_array($parent) && isset($parent['term_id'])) {
                 recursionInsertTaxonomy($value, $tax_name, (int) $parent['term_id']);
             }
+
+            continue;
+        }
+
+        if (term_exists($value, $tax_name)) {
+            continue;
+        }
+
+        if ($parent_id !== null) {
+            wp_insert_term($value, $tax_name, ['parent' => $parent_id]);
         } else {
-            if (term_exists($value, $tax_name)) {
-                continue;
+            wp_insert_term($value, $tax_name);
+        }
+    }
+}
+
+/**
+ * Aggiorna descrizioni tassonomia in modo ricorsivo.
+ *
+ * @param array<int|string,mixed> $array
+ * @param string                  $tax_name
+ * @param int|null                $parent_id
+ * @return void
+ */
+function dci_update_categoria_description_recursive($array, $tax_name, $parent_id = null) {
+    foreach ($array as $key => $value) {
+        if (!is_numeric($key)) {
+            $term = get_term_by('name', $key, $tax_name);
+            if ($term instanceof WP_Term) {
+                wp_update_term($term->term_id, $tax_name, [
+                    'description' => sprintf('Categoria %s', $term->name),
+                    'parent'      => $parent_id !== null ? $parent_id : 0,
+                ]);
+
+                dci_update_categoria_description_recursive($value, $tax_name, (int) $term->term_id);
             }
 
-            $parent_id !== null ? wp_insert_term($value, $tax_name, ['parent' => $parent_id]) : wp_insert_term($value, $tax_name);
+            continue;
         }
+
+        $term = get_term_by('name', (string) $value, $tax_name);
+        if (!$term instanceof WP_Term) {
+            continue;
+        }
+
+        wp_update_term($term->term_id, $tax_name, [
+            'description' => sprintf('Categoria %s', $term->name),
+            'parent'      => $parent_id !== null ? $parent_id : 0,
+        ]);
     }
 }
