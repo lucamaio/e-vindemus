@@ -3,4 +3,8 @@
     foreach(glob(get_template_directory() . "/inc/admin/tassonomie/*.php") as $file){
         require $file;
     }
+
+    foreach(glob(get_template_directory() . "/inc/admin/tassonomie/tassonomie_abbigliamento/*.php") as $file){
+        require $file;
+    }
 ?>

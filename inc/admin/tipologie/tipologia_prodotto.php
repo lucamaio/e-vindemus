@@ -242,26 +242,50 @@ function dci_add_prodotto_metaboxes() {
     ));
 
     // Sezione Relativo alla gestione dello stock del prodotto (es. quantità disponibile, gestione magazzino, ecc.)
+    // Sezione rimmossa in quanto attualmente non viene gestita la quantità disponibile in stock per i prodotti, ma potrebbe essere implementata in futuro se necessario. In questo caso, si potrebbe aggiungere un campo per la quantità disponibile in stock e implementare una logica per aggiornare automaticamente lo stato del prodotto (es. "Disponibile", "Esaurito") in base alla quantità disponibile.  
+    // $cmb_stock = new_cmb2_box(array(
+    //     'id'            => $prefix . 'Stock Prodotto',
+    //     'title'         => __('Stock Prodotto', 'e-vindemus'),
+    //     'object_types'  => array('prodotto'), // Solo per la tipologia "Prodotto"
+    //     'context'       => 'normal', // Posizione normale (non laterale)
+    //     'priority'      => 'default',
+    // ));
 
-    $cmb_stock = new_cmb2_box(array(
-        'id'            => $prefix . 'Stock Prodotto',
-        'title'         => __('Stock Prodotto', 'e-vindemus'),
+    // $cmb_stock->add_field(array(
+    //     'id'   => $prefix . 'quantita_disponibile',
+    //     'name' => __('Quantità Disponibile', 'e-vindemus'),
+    //     'desc' => __('Inserisci la quantità disponibile in stock per questo prodotto.', 'e-vindemus'),
+    //     'type' => 'text_small',
+    //     'attributes'    => array(
+    //         'pattern'     => '\d+', // Validazione per numeri interi
+    //         'title'       => 'Inserisci una quantità valida (numeri interi)',
+    //         'min'         => '0' // Quantità minima accettabile fissata a 0
+    //     )
+    // ));
+
+    // Sezione laterale relativa alla gestione dello stato del prodotto (es. disponibile, esaurito, in arrivo, ecc.)
+
+    $cmb_stato = new_cmb2_box(array(
+        'id'            => $prefix . 'Stato Prodotto',
+        'title'         => __('Stato Prodotto', 'e-vindemus'),
         'object_types'  => array('prodotto'), // Solo per la tipologia "Prodotto"
-        'context'       => 'normal', // Posizione normale (non laterale)
+        'context'       => 'side', // Posizione laterale
         'priority'      => 'default',
     ));
 
-    $cmb_stock->add_field(array(
-        'id'   => $prefix . 'quantita_disponibile',
-        'name' => __('Quantità Disponibile', 'e-vindemus'),
-        'desc' => __('Inserisci la quantità disponibile in stock per questo prodotto.', 'e-vindemus'),
-        'type' => 'text_small',
+    $cmb_stato->add_field(array(
+        'id'   => $prefix . 'stato_prodotto',
+        'name' => __('Stato Prodotto *', 'e-vindemus'),
+        'desc' => __('Seleziona lo stato del prodotto (es. Disponibile, Esaurito, In arrivo).', 'e-vindemus'),
+        'type' => 'taxonomy_radio_hierarchical',
+        'taxonomy' => 'stato_prodotto', // Associa questo campo alla tassonomia "Stato prodotto"
+        'show_option_none' => false,
+        'remove_default' => 'true',
         'attributes'    => array(
-            'pattern'     => '\d+', // Validazione per numeri interi
-            'title'       => 'Inserisci una quantità valida (numeri interi)',
-            'min'         => '0' // Quantità minima accettabile fissata a 0
-        )
+            'required'    => 'required'
+        ),
     ));
+
 
     // Sezione laterale per la gestione della tipologia del prodotto (es. vino, accessorio, ecc.)
     $cmb_tipo = new_cmb2_box(array(
@@ -284,20 +308,81 @@ function dci_add_prodotto_metaboxes() {
         'remove_default' => 'true'
     ));
 
-    // $cmb_tipo->add_field(array(
-    //     'id'   => $prefix . 'tipo_prodotto',
-    //     'name' => __('Tipo Prodotto', 'e-vindemus'),
-    //     'desc' => __('Seleziona la tipologia del prodotto (es. vino, accessorio, ecc.).', 'e-vindemus'),
-    //     'type' => 'select',
-    //     'options' => array(
-    //         'vino' => __('Vino', 'e-vindemus'),
-    //         'accessorio' => __('Accessorio', 'e-vindemus'),
-    //         'altro' => __('Altro', 'e-vindemus'),
-    //     ),
-    //     'attributes'    => array(
-    //         'required'    => 'required'
-    //     )
-    // ));
+    // Sezione laterale per la gestione dei campi relativi alla categoria Abbigliamento (es. Taglia, Colore, Materiale, ecc.)
+
+    $cmb_categoria_abbigliamento = new_cmb2_box(array(
+        'id'            => $prefix . 'Categoria Abbigliamento',
+        'title'         => __('Categoria Abbigliamento', 'e-vindemus'),
+        'object_types'  => array('prodotto'), // Solo per la tipologia "Prodotto"
+        'context'       => 'side', // Posizione laterale
+        'priority'      => 'default',
+    ));
+
+    // Campo per la selezione della taglia del prodotto (es. S, M, L, XL, ecc.)
+
+    $cmb_categoria_abbigliamento->add_field(array(
+        'id'   => $prefix . 'taglia_prodotto',
+        'name' => __('Taglia Prodotto', 'e-vindemus'),
+        'desc' => __('Seleziona la taglia del prodotto (es. S, M, L, XL, ecc.).', 'e-vindemus'),
+        'type' => 'taxonomy_multicheck_hierarchical',
+        'taxonomy' => 'taglia', // Associa questo campo alla tassonomia "Taglia"
+        'show_option_none' => false,
+        'remove_default' => 'true'
+        ),
+    );
+
+    // Campo per la selezione della taglia di scarpe del prodotto (es. 38, 39, 40, ecc.)
+
+    $cmb_categoria_abbigliamento->add_field(array(
+        'id'   => $prefix . 'taglia_scarpe_prodotto',
+        'name' => __('Taglia Scarpe Prodotto', 'e-vindemus'),
+        'desc' => __('Seleziona la taglia di scarpe del prodotto (es. 38, 39, 40, ecc.).', 'e-vindemus'),
+        'type' => 'taxonomy_multicheck_hierarchical',
+        'taxonomy' => 'taglia_scarpe', // Associa questo campo alla tassonomia "Taglia Scarpe"
+        'show_option_none' => false,
+        'remove_default' => 'true'
+        ),
+    );
+
+    // Campo per la selezione del sesso del prodotto (es. Uomo, Donna, Unisex)
+
+    $cmb_categoria_abbigliamento->add_field(array(
+        'id'   => $prefix . 'sesso_prodotto',
+        'name' => __('Sesso Prodotto', 'e-vindemus'),
+        'desc' => __('Seleziona il sesso del prodotto (es. Uomo, Donna, Unisex).', 'e-vindemus'),
+        'type' => 'taxonomy_multicheck_hierarchical',
+        'taxonomy' => 'sesso', // Associa questo campo alla tassonomia "Sesso"
+        'show_option_none' => false,
+        'remove_default' => 'true'
+        ),
+    );
+
+    // Campo per la selezione del materiale del prodotto (es. Cotone, Poliestere, ecc.)
+
+    $cmb_categoria_abbigliamento->add_field(array(
+        'id'   => $prefix . 'materiale_prodotto',
+        'name' => __('Materiale Prodotto', 'e-vindemus'),
+        'desc' => __('Seleziona il materiale del prodotto (es. Cotone, Poliestere, ecc.).', 'e-vindemus'),
+        'type' => 'taxonomy_multicheck_hierarchical',
+        'taxonomy' => 'materiale', // Associa questo campo alla tassonomia "Materiale"
+        'show_option_none' => false,
+        'remove_default' => 'true'
+        ),
+    );
+
+    // Campo per la selezione del colore del prodotto (es. Rosso, Blu, Verde, ecc.)
+    $cmb_categoria_abbigliamento->add_field(array(
+        'id'   => $prefix . 'colore_prodotto',
+        'name' => __('Colore Prodotto', 'e-vindemus'),
+        'desc' => __('Seleziona il colore del prodotto (es. Rosso, Blu, Verde, ecc.).', 'e-vindemus'),
+        'type' => 'taxonomy_multicheck_hierarchical',
+        'taxonomy' => 'colore', // Associa questo campo alla tassonomia "Colore"
+        'show_option_none' => false,
+        'remove_default' => 'true'
+        ),
+    );
+
+
 
     // DA IMPLEMENTARE aggiungere la possibilità di fare in modo che lo stato del prodotto si aggiorni automaticamente in base alla quantità disponibile in stock (es. se la quantità è 0, lo stato del prodotto diventa "Esaurito", se la quantità è maggiore di 0, lo stato del prodotto diventa "Disponibile"). Questo potrebbe essere implementato tramite un hook che si attiva quando viene salvato il prodotto e aggiorna automaticamente lo stato in base alla quantità disponibile.
 }

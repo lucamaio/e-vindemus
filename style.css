@@ -348,10 +348,20 @@ body {
     display: block;
 }
 
+.ev-hero__image-wrap:hover .ev-hero__content {
+    opacity: 1;
+    visibility: visible;
+}
 .ev-hero__overlay {
     position: absolute;
     inset: 0;
+    opacity: 0.25;
+    transition: opacity 0.4s ease;
     background: linear-gradient(115deg, rgba(15, 23, 42, 0.86) 16%, rgba(15, 23, 42, 0.3) 60%, rgba(37, 99, 235, 0.35));
+}
+
+.ev-hero__image-wrap:hover .ev-hero__overlay {
+    opacity: 1;
 }
 
 .ev-hero__content {
@@ -361,6 +371,12 @@ body {
     padding: 36px;
     color: #f8fafc;
     z-index: 2;
+    align-items: center;
+    text-align: left;
+
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.4s ease, visibility 0.4s ease;
 }
 
 .ev-badge {
@@ -400,7 +416,7 @@ body {
     align-items: center;
     justify-content: center;
     border: none;
-    border-radius: 999px;
+    border-radius: 8px;
     padding: 11px 18px;
     text-decoration: none;
     font-weight: 700;

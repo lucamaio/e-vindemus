@@ -393,8 +393,34 @@ add_action('admin_post_dci_reload_theme_components', 'dci_handle_theme_reload_re
  * @return void
  */
 function insertCustomTaxonomyTerms() {
+
+    // Inserisco categorie prodotto
     $categorie_array = dci_categorie_prodotti_array();
     recursionInsertTaxonomy($categorie_array, 'categoria_prodotto');
+
+    // Inserisco stati prodotto
+    $stati_array = dci_stati_prodotti_array();
+    recursionInsertTaxonomy($stati_array, 'stato_prodotto');
+
+    // Inserisco le taglie (abbigliamento)
+    $taglie_array = dci_taglie_abbigliamento_array();
+    recursionInsertTaxonomy($taglie_array, 'taglia');
+
+    // inserisco le taglie delle scarpe
+    $taglie_scarpe_array = dci_taglie_scarpe_array();
+    recursionInsertTaxonomy($taglie_scarpe_array, 'taglia_scarpe');
+
+    // inserisco i materiali (abbigliamento)
+    $materiali_array = dci_materiali_abbigliamento_array();
+    recursionInsertTaxonomy($materiali_array, 'materiale');
+
+    // inserisco il sesso (abbigliamento)
+    $sesso_array = dci_sesso_abbigliamento_array();
+    recursionInsertTaxonomy($sesso_array, 'sesso');
+
+    // inserisco i colori
+    $colori_array = dci_colori_abbigliamento_array();
+    recursionInsertTaxonomy($colori_array, 'colore');
 }
 
 /**
