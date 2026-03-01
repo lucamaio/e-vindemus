@@ -77,6 +77,10 @@ function dci_add_prodotto_metaboxes() {
 
     $prefix = '_dci_prodotto_';
 
+    /**
+     *  Campi sezione Principale
+     */
+
     // Metabox per le immagini del prodotto (es. galleria immagini, immagine in evidenza, ecc.)
 
     $cmb_imgs = new_cmb2_box(array(
@@ -263,6 +267,51 @@ function dci_add_prodotto_metaboxes() {
     //     )
     // ));
 
+    /**
+     *  Campi sezione laterale
+    */
+
+    // Sezione laterale relativa alla gestione del posizionamento evidenziato del prodotto (es. homepage, offerte, ecc.)
+
+    $cmb_posizione_evidenziata = new_cmb2_box(array(
+        'id'            => $prefix . 'Posizione Evidenziata Prodotto',
+        'title'         => __('Posizione Evidenziata Prodotto', 'e-vindemus'),
+        'object_types'  => array('prodotto'), // Solo per la tipologia "Prodotto"
+        'context'       => 'side', // Posizione laterale
+        'priority'      => 'high',
+    ));
+
+    $cmb_posizione_evidenziata->add_field(array(
+        'id'   => $prefix . 'posizione_evidenziata',
+        'name' => __('Posizione Evidenziata', 'e-vindemus'),
+        'desc' => __('Seleziona la posizione in cui evidenziare il prodotto (es. homepage, offerte, ecc.).<br>Se non selezioni niente allora non verà messa in evidenza.', 'e-vindemus'),
+        'type' => 'taxonomy_multicheck_hierarchical',
+        'taxonomy' => 'posizione_evidenziata', // Associa questo campo alla tassonomia "Posizione evidenziata"
+        'show_option_none' => false,
+        'remove_default' => 'true'
+    ));
+
+    // Data inizio evidenza e data fine
+
+    $cmb_posizione_evidenziata->add_field(array(
+        'id' => $prefix.'data_inizio_evidenza',
+        'name' => __('Data Inizio: ','e-vindemus'),
+        'type'    => 'text_date_timestamp',
+        'date_format' => 'd-m-Y'
+    ));
+
+     $cmb_posizione_evidenziata->add_field(array(
+        'id' => $prefix.'data_fine_evidenza',
+        'name' => __('Data Fine: ','e-vindemus'),
+        'type'    => 'text_date_timestamp',
+        'date_format' => 'd-m-Y'
+    ));
+
+    $cmb_posizione_evidenziata->add_field(array(
+        'desc' => __("Attenzione, se il prodotto evidenziato è segnato come NON DISPONIBILE, ESAURiTO allora non verà visualizzato. Se Viene inserita una data di inizio e una di fine dopo tale periodo non sarà più in evidenza.")
+    ));
+
+
     // Sezione laterale relativa alla gestione dello stato del prodotto (es. disponibile, esaurito, in arrivo, ecc.)
 
     $cmb_stato = new_cmb2_box(array(
@@ -386,6 +435,181 @@ function dci_add_prodotto_metaboxes() {
 
     // DA IMPLEMENTARE aggiungere la possibilità di fare in modo che lo stato del prodotto si aggiorni automaticamente in base alla quantità disponibile in stock (es. se la quantità è 0, lo stato del prodotto diventa "Esaurito", se la quantità è maggiore di 0, lo stato del prodotto diventa "Disponibile"). Questo potrebbe essere implementato tramite un hook che si attiva quando viene salvato il prodotto e aggiorna automaticamente lo stato in base alla quantità disponibile.
 }
+
+/**
+ * Script admin: visibilità dinamica campi abbigliamento nel CPT prodotto.
+ * - Mostra "Categoria Abbigliamento" solo se è selezionata una categoria figlia di Abbigliamento.
+ * - Se è selezionata una categoria Scarpe, mostra taglia scarpe e nasconde taglia prodotto.
+ */
+function dci_prodotto_categoria_abbigliamento_visibility_script() {
+    if (!is_admin()) {
+        return;
+    }
+
+    $screen = function_exists('get_current_screen') ? get_current_screen() : null;
+    if (!$screen || $screen->post_type !== 'prodotto') {
+        return;
+    }
+
+    $abbigliamento_ids = [];
+    $abbigliamento_term = get_term_by('slug', 'abbigliamento', 'categoria_prodotto');
+    if (!$abbigliamento_term || is_wp_error($abbigliamento_term)) {
+        $abbigliamento_term = get_term_by('name', 'Abbigliamento', 'categoria_prodotto');
+    }
+
+    if ($abbigliamento_term instanceof WP_Term) {
+        $children = get_term_children((int) $abbigliamento_term->term_id, 'categoria_prodotto');
+        if (is_wp_error($children)) {
+            $children = [];
+        }
+        $abbigliamento_ids = array_values(array_unique(array_merge([(int) $abbigliamento_term->term_id], array_map('intval', $children))));
+    }
+
+    $scarpe_ids = [];
+    if (!empty($abbigliamento_ids)) {
+        $abbigliamento_terms = get_terms([
+            'taxonomy'   => 'categoria_prodotto',
+            'hide_empty' => false,
+            'include'    => $abbigliamento_ids,
+        ]);
+
+        if (!is_wp_error($abbigliamento_terms) && !empty($abbigliamento_terms)) {
+            foreach ($abbigliamento_terms as $term) {
+                if (!$term instanceof WP_Term) {
+                    continue;
+                }
+
+                $slug = sanitize_title((string) $term->slug);
+                $name = sanitize_title((string) $term->name);
+                if (false !== strpos($slug, 'scarp') || false !== strpos($name, 'scarp')) {
+                    $scarpe_ids[] = (int) $term->term_id;
+                }
+            }
+        }
+    }
+    ?>
+    <script>
+    (function () {
+        var abbigliamentoIds = <?php echo wp_json_encode(array_values(array_unique(array_map('intval', $abbigliamento_ids)))); ?>;
+        var scarpeIds = <?php echo wp_json_encode(array_values(array_unique(array_map('intval', $scarpe_ids)))); ?>;
+
+        var toArray = function (items) {
+            return Array.prototype.slice.call(items || []);
+        };
+
+        var toSafeText = function (value) {
+            return String(value || '').toLowerCase().trim();
+        };
+
+        var getSelectedTipoIds = function () {
+            var inputs = document.querySelectorAll(
+                '.cmb2-id--dci-prodotto-tipo-prodotto input[type="checkbox"]:checked,' +
+                '.cmb2-id--dci-prodotto-tipo-prodotto input[type="radio"]:checked,' +
+                'input[name*="_dci_prodotto_tipo_prodotto"][type="checkbox"]:checked,' +
+                'input[name*="_dci_prodotto_tipo_prodotto"][type="radio"]:checked'
+            );
+
+            return toArray(inputs).map(function (input) {
+                return parseInt(input.value || '0', 10);
+            }).filter(function (id) {
+                return !Number.isNaN(id) && id > 0;
+            });
+        };
+
+        var getCategoriaAbbigliamentoBox = function () {
+            var byId = document.getElementById('_dci_prodotto_Categoria Abbigliamento');
+            if (byId) {
+                return byId;
+            }
+
+            var postboxes = toArray(document.querySelectorAll('.postbox'));
+            return postboxes.find(function (box) {
+                var title = box.querySelector('.hndle, .cmb2-metabox-title, h2 span');
+                return title && toSafeText(title.textContent).indexOf('categoria abbigliamento') !== -1;
+            }) || null;
+        };
+
+        var getTagliaRow = function () {
+            return document.querySelector(
+                '.cmb2-id--dci-prodotto-taglia-prodotto,' +
+                '[class*="cmb2-id-_dci_prodotto_taglia_prodotto"],' +
+                '[class*="cmb2-id--dci-prodotto-taglia-prodotto"]'
+            );
+        };
+
+        var getTagliaScarpeRow = function () {
+            return document.querySelector(
+                '.cmb2-id--dci-prodotto-taglia-scarpe-prodotto,' +
+                '[class*="cmb2-id-_dci_prodotto_taglia_scarpe_prodotto"],' +
+                '[class*="cmb2-id--dci-prodotto-taglia-scarpe-prodotto"]'
+            );
+        };
+
+        var setVisible = function (element, visible) {
+            if (!element) {
+                return;
+            }
+            element.style.display = visible ? '' : 'none';
+        };
+
+        var syncVisibility = function () {
+            var selectedIds = getSelectedTipoIds();
+            var isAbbigliamento = selectedIds.some(function (id) {
+                return abbigliamentoIds.indexOf(id) !== -1;
+            });
+            var isScarpe = selectedIds.some(function (id) {
+                return scarpeIds.indexOf(id) !== -1;
+            });
+
+            var box = getCategoriaAbbigliamentoBox();
+            var tagliaRow = getTagliaRow();
+            var tagliaScarpeRow = getTagliaScarpeRow();
+
+            setVisible(box, isAbbigliamento);
+
+            if (!isAbbigliamento) {
+                setVisible(tagliaRow, false);
+                setVisible(tagliaScarpeRow, false);
+                return;
+            }
+
+            setVisible(tagliaScarpeRow, isScarpe);
+            setVisible(tagliaRow, !isScarpe);
+        };
+
+        document.addEventListener('change', function (event) {
+            if (!event.target) {
+                return;
+            }
+
+            var target = event.target;
+            var isTipoField = false;
+
+            if (target.name && target.name.indexOf('_dci_prodotto_tipo_prodotto') !== -1) {
+                isTipoField = true;
+            }
+
+            if (!isTipoField) {
+                var row = target.closest('.cmb-row');
+                if (row && row.className && row.className.indexOf('tipo-prodotto') !== -1) {
+                    isTipoField = true;
+                }
+            }
+
+            if (isTipoField) {
+                syncVisibility();
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', syncVisibility);
+        window.setTimeout(syncVisibility, 180);
+        window.setTimeout(syncVisibility, 500);
+    })();
+    </script>
+    <?php
+}
+add_action('admin_footer-post.php', 'dci_prodotto_categoria_abbigliamento_visibility_script');
+add_action('admin_footer-post-new.php', 'dci_prodotto_categoria_abbigliamento_visibility_script');
 
 // Aggiugere degli script che verificano se i campi sono compilati in modo giusto.
 

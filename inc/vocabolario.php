@@ -1,16 +1,68 @@
 <?php
 
+// Funzione per recuperare le posizioni evidenziate dei prodotti
+
+if(!function_exists('dci_posizioni_evidenziata_array')) {
+    function dci_posizioni_evidenziata_array() {
+        $posizioni_evidenziata_array = [
+            "Homepage",
+            "Offerte",
+            "Novità",
+            'Pokemon',
+            'Abbigliamento',
+            'Best seller'
+        ];
+
+        return $posizioni_evidenziata_array;
+    }
+}
+
+// Funzione per recuperare array di categorie prodotti
 if(!function_exists('dci_categorie_prodotti_array')) {
     function dci_categorie_prodotti_array() {
         $categorie_prodotti_array = [
+            'Accessori' =>
+                [
+                    'Testa e collo' => [
+                        'Cappelli',
+                        'Guanti',
+                        'Sciarpe',
+                    ],
+                    'Borse e zaini' => [
+                        'Zaini',
+                        'Borse',
+                        'Portafogli',
+                        'Marsupi'
+                    ],
+                    'Mani e polsi' => [
+                        'Bracciali',
+                        'Cinture'
+                    ],
+                    'Gioielli' => [
+                        'Orecchini',
+                        'Collane',
+                        'Anelli',
+                        'Orologi'
+                    ],
+                    'Accessori vari' => [
+                        'Occhiali da sole',
+                        'Cinture',
+                        'Calze',
+                        'Cravatte',
+                        'Papillon',
+                    ],
+                    'Accessori per la casa' => [
+                        'Tazze',
+                        'Cuscini',
+                        'Poster'
+                    ]
+                ],
             'Pokemon' =>
                 [
-                    'Accessori',
                     'Box',
                     'Bustine singole',
                     'Carte Singole',
                     'Carte Gradate',
-                    'Carte Jumbo',
                     'Collezioni Speciali',
                     'Gadget',
                     'Mazzi',
@@ -20,20 +72,15 @@ if(!function_exists('dci_categorie_prodotti_array')) {
                 [
                     "T-shirt",
                     "Felpe",
+                    "Maglioni",
                     "Camicie",
-                    "Cappelli",
                     "Giacche",
                     "Pantaloni",
+                    "J-eans",
                     "Scarpe",
-                    "Accessori",
-                    "Zaini", 
                     'Intimo',
                     "Costumi da bagno",
-                    "Borse",
-                    "Guanti",
-                    "Sciarpe",
-                    "Calze",
-                    "Orologi"
+                    'Pigiami',
                 ]
         ]; 
 

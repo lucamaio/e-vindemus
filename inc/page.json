@@ -8,5 +8,30 @@
     "name": "Abbigliamento",
     "slug": "abbigliamento",
     "template": "page-template/abbigliamento-page.php"
+  },
+  {
+    "name": "Accessori",
+    "slug": "accessori",
+    "template": "page-template/accessori.php"
+  },
+  {
+    "name": "Offerte",
+    "slug": "offerte",
+    "template": "page-template/offerte.php"
+  },
+  {
+    "name": "Login",
+    "slug": "login",
+    "template": "page-template/login.php"
+  },
+  {
+    "name": "Ricerca Prodotti",
+    "slug": "ricerca-prodotti",
+    "template": "page-template/ricerca-prodotti.php"
+  },
+  {
+    "name": "Tutti i prodotti",
+    "slug": "tutti-prodotti",
+    "template": "page-template/tutti-prodotti.php"
   }
 ]

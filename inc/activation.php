@@ -33,11 +33,18 @@ function dci_reload_theme_components($reset_options = false) {
     $report['rolled_back'] = !empty($pages_sync_report['rolled_back']);
 
     if ($reset_options) {
-        update_option('ev_home_alert_options', [
-            'message' => '🚚 Spedizione gratuita sopra i 59€ · Resi entro 30 giorni',
-            'color'   => 'blue',
-            'show'    => false,
-        ]);
+        $homepage_options = get_option('homepage', []);
+        if (!is_array($homepage_options)) {
+            $homepage_options = [];
+        }
+
+        $homepage_options['home_alert_message'] = 'Spedizione gratuita sopra i 59 euro';
+        $homepage_options['home_alert_color'] = 'blue';
+        $homepage_options['home_alert_show'] = false;
+        $homepage_options['home_alert_start_date'] = '';
+        $homepage_options['home_alert_end_date'] = '';
+
+        update_option('homepage', $homepage_options);
     }
 
     flush_rewrite_rules(false);
@@ -394,6 +401,10 @@ add_action('admin_post_dci_reload_theme_components', 'dci_handle_theme_reload_re
  */
 function insertCustomTaxonomyTerms() {
 
+    // Inserisco le posizioni in evidenza
+    $posizioni_evidenza_array = dci_posizioni_evidenziata_array();
+    recursionInsertTaxonomy($posizioni_evidenza_array, 'posizione_evidenziata');
+
     // Inserisco categorie prodotto
     $categorie_array = dci_categorie_prodotti_array();
     recursionInsertTaxonomy($categorie_array, 'categoria_prodotto');
@@ -514,3 +525,4 @@ function dci_update_categoria_description_recursive($array, $tax_name, $parent_i
         ]);
     }
 }
+
