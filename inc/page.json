@@ -25,6 +25,11 @@
     "template": "page-template/login.php"
   },
   {
+    "name":"Registrati",
+     "slug":"registrati",
+     "template":"page-template/registrati.php"
+  },
+  {
     "name": "Ricerca Prodotti",
     "slug": "ricerca-prodotti",
     "template": "page-template/ricerca-prodotti.php"

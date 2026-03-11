@@ -5,6 +5,8 @@
  */
 
 get_header();
+
+$login_api_url = apply_filters('ev_login_api_url', 'http://localhost:5000/api/auth/login');
 ?>
 
 <main>
@@ -16,7 +18,7 @@ get_header();
                     <p>Inserisci le credenziali per accedere all area personale.</p>
                 </div>
 
-                <form id="ev-login-form" class="ev-login-form" method="post" novalidate>
+                <form id="ev-login-form" class="ev-login-form" method="post" novalidate data-api-endpoint="<?php echo esc_url($login_api_url); ?>">
                     <div class="ev-login-form__field">
                         <label for="ev-login-username">Email o username</label>
                         <input id="ev-login-username" name="username" type="text" autocomplete="username" required>
@@ -36,11 +38,12 @@ get_header();
                 </form>
 
                 <p id="ev-login-feedback" class="ev-login-feedback" aria-live="polite"></p>
+                <p class="ev-login-feedback">Non hai un account? <a href="<?php echo esc_url(home_url('/registrati')); ?>">Registrati</a></p>
             </div>
         </section>
     </section>
 </main>
 
-<script src="'<?php echo get_template_directory(); ?>'/assets/js/login.js"></script>
+<script src="<?php echo esc_url(get_template_directory_uri() . '/assets/js/login.js'); ?>"></script>
 
 <?php get_footer(); ?>

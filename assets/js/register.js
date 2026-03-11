@@ -1,6 +1,6 @@
 (function () {
-    var form = document.getElementById('ev-login-form');
-    var feedback = document.getElementById('ev-login-feedback');
+    var form = document.getElementById('ev-register-form');
+    var feedback = document.getElementById('ev-register-feedback');
     if (!form || !feedback) {
         return;
     }
@@ -11,10 +11,11 @@
         event.preventDefault();
 
         var username = form.username ? form.username.value.trim() : '';
+        var email = form.email ? form.email.value.trim() : '';
         var password = form.password ? form.password.value : '';
 
-        if (!username || !password) {
-            feedback.textContent = 'Inserisci username e password.';
+        if (!username || !email || !password) {
+            feedback.textContent = 'Compila nome utente, email e password.';
             feedback.classList.add('is-error');
             return;
         }
@@ -22,7 +23,7 @@
         feedback.classList.remove('is-error', 'is-success');
 
         if (!apiEndpoint) {
-            feedback.textContent = 'Endpoint API login non configurato.';
+            feedback.textContent = 'Endpoint API registrazione non configurato.';
             feedback.classList.add('is-error');
             return;
         }
@@ -32,22 +33,23 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 username: username,
-                password: password,
-                remember: !!(form.remember && form.remember.checked)
+                email: email,
+                password: password
             })
         })
             .then(function (response) {
                 if (!response.ok) {
-                    throw new Error('Credenziali non valide');
+                    throw new Error('Registrazione non riuscita');
                 }
                 return response.json();
             })
             .then(function () {
-                feedback.textContent = 'Accesso effettuato con successo.';
+                feedback.textContent = 'Registrazione completata con successo.';
                 feedback.classList.add('is-success');
+                form.reset();
             })
             .catch(function (error) {
-                feedback.textContent = error && error.message ? error.message : 'Accesso non riuscito.';
+                feedback.textContent = error && error.message ? error.message : 'Errore durante la registrazione.';
                 feedback.classList.add('is-error');
             });
     });
