@@ -6,7 +6,7 @@
 
 get_header();
 
-$register_api_url = apply_filters('ev_register_api_url', 'http://localhost:5000/api/auth/register');
+$url_API = get_option('homepage', [])['home_login_api_url'] . '/api/users' ?? '';
 ?>
 
 <main>
@@ -18,10 +18,15 @@ $register_api_url = apply_filters('ev_register_api_url', 'http://localhost:5000/
                     <p>Compila i campi per registrarti e iniziare a usare l area personale.</p>
                 </div>
 
-                <form id="ev-register-form" class="ev-login-form" method="post" novalidate data-api-endpoint="<?php echo esc_url($register_api_url); ?>">
+                <form id="ev-register-form" class="ev-login-form" method="post" novalidate data-api-endpoint="<?php echo esc_url($url_API); ?>">
                     <div class="ev-login-form__field">
-                        <label for="ev-register-username">Nome utente</label>
-                        <input id="ev-register-username" name="username" type="text" autocomplete="username" required>
+                        <label for="ev-register-first-name">Nome</label>
+                        <input id="ev-register-first-name" name="firstName" type="text" autocomplete="given-name" required>
+                    </div>
+
+                    <div class="ev-login-form__field">
+                        <label for="ev-register-last-name">Cognome</label>
+                        <input id="ev-register-last-name" name="lastName" type="text" autocomplete="family-name" required>
                     </div>
 
                     <div class="ev-login-form__field">
@@ -37,8 +42,8 @@ $register_api_url = apply_filters('ev_register_api_url', 'http://localhost:5000/
                     <button type="submit" class="ev-btn ev-btn--primary ev-login-form__submit">Registrati</button>
                 </form>
 
-                <p id="ev-register-feedback" class="ev-login-feedback" aria-live="polite"></p>
-                <p class="ev-login-feedback">Hai già un account? <a href="<?php echo esc_url(home_url('/login')); ?>">Accedi</a></p>
+                <p id="ev-register-feedback" class="ev-login-feedback" aria-live="polite" hidden></p>
+                <p class="ev-login-meta">Hai gia un account? <a href="<?php echo esc_url(home_url('/login')); ?>">Accedi</a></p>
             </div>
         </section>
     </section>

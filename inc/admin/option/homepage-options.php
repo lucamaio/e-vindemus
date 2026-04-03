@@ -112,6 +112,24 @@ function dci_register_homepage_options() {
         'desc' => __('Data/ora di disattivazione dell alert. Se vuota, l alert resta visibile finche non viene disabilitato manualmente.', 'e-vindemus'),
         'type' => 'text_date_timestamp',
     ]);
+
+    // SEZIONE Dedicata alla configurazione dell'indirizzo delle API
+
+    $home_options->add_field([
+        'id'   => $prefix . 'home_api_section',
+        'name' => __('Configurazione endpoint API', 'e-vindemus'),
+        'desc' => __('Definisci gli endpoint delle API per le funzionalita di login e registrazione. Utile per ambienti di sviluppo o integrazioni personalizzate.', 'e-vindemus'),
+        'type' => 'title',
+    ]);
+
+    $home_options->add_field([
+        'id'      => $prefix . 'home_api_url',
+        'name'    => __('Endpoint API', 'e-vindemus'),
+        'desc'    => __('URL dell endpoint API per la funzionalita di accesso e registrazione. Assicurati che l endpoint sia accessibile e restituisca i dati nel formato previsto.', 'e-vindemus'),
+        'type'    => 'text_url',
+        'default' => 'https://unrotten-planographically-lynelle.ngrok-free.dev',
+    ]);
+
 }
 add_action('cmb2_admin_init', 'dci_register_homepage_options');
 

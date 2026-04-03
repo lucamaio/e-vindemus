@@ -125,7 +125,7 @@ function dci_create_pages_from_json_config() {
     $created_page_ids = [];
 
     foreach ($pages as $page_data) {
-        $existing_page = dci_get_page_by_slug_including_trashed($page_data['slug']);
+        $existing_page = dci_find_existing_page_for_sync($page_data);
 
         if ($existing_page instanceof WP_Post) {
             $modified_pages[$existing_page->ID] = dci_get_page_state_snapshot($existing_page->ID);
@@ -278,6 +278,60 @@ if (!function_exists('dci_get_page_by_slug_including_trashed')) {
 }
 
 /**
+ * Recupera una pagina esistente per sync usando slug, template o titolo.
+ *
+ * @param array{name:string,slug:string,template:string} $page_data Config pagina.
+ * @return WP_Post|null
+ */
+if (!function_exists('dci_find_existing_page_for_sync')) {
+    function dci_find_existing_page_for_sync($page_data) {
+        $slug = isset($page_data['slug']) ? sanitize_title((string) $page_data['slug']) : '';
+        $template = isset($page_data['template']) ? ltrim((string) $page_data['template'], '/') : '';
+        $title = isset($page_data['name']) ? sanitize_text_field((string) $page_data['name']) : '';
+
+        if ($slug !== '') {
+            $page = dci_get_page_by_slug_including_trashed($slug);
+            if ($page instanceof WP_Post) {
+                return $page;
+            }
+        }
+
+        if ($template !== '') {
+            $pages_by_template = get_posts([
+                'post_type'      => 'page',
+                'post_status'    => 'any',
+                'posts_per_page' => 1,
+                'meta_key'       => '_wp_page_template',
+                'meta_value'     => $template,
+                'orderby'        => 'ID',
+                'order'          => 'ASC',
+            ]);
+
+            if (isset($pages_by_template[0]) && $pages_by_template[0] instanceof WP_Post) {
+                return $pages_by_template[0];
+            }
+        }
+
+        if ($title !== '') {
+            $pages_by_title = get_posts([
+                'post_type'      => 'page',
+                'post_status'    => 'any',
+                'posts_per_page' => 1,
+                'title'          => $title,
+                'orderby'        => 'ID',
+                'order'          => 'ASC',
+            ]);
+
+            if (isset($pages_by_title[0]) && $pages_by_title[0] instanceof WP_Post) {
+                return $pages_by_title[0];
+            }
+        }
+
+        return null;
+    }
+}
+
+/**
  * Attivazione del tema.
  */
 function dci_theme_activation() {
@@ -412,6 +466,10 @@ function insertCustomTaxonomyTerms() {
     // Inserisco stati prodotto
     $stati_array = dci_stati_prodotti_array();
     recursionInsertTaxonomy($stati_array, 'stato_prodotto');
+
+    // Inserisco tipologie notizia
+    $tipologie_notizia_array = dci_tipologie_notizia_array();
+    recursionInsertTaxonomy($tipologie_notizia_array, 'tipologia_notizia');
 
     // Inserisco le taglie (abbigliamento)
     $taglie_array = dci_taglie_abbigliamento_array();

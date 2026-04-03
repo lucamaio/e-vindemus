@@ -6,7 +6,17 @@
 
 get_header();
 
-$login_api_url = apply_filters('ev_login_api_url', 'http://localhost:5000/api/auth/login');
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
+}
+
+if (isset($_SESSION['user_id']) || isset($_SESSION['token'])) {
+    wp_safe_redirect(home_url());
+    exit;
+}
+
+$url_API = get_option('homepage', [])['home_api_url'] . '/api/auth/login' ?? '';
+$session_init_url = home_url('/inizializza-sessione/');
 ?>
 
 <main>
@@ -18,10 +28,10 @@ $login_api_url = apply_filters('ev_login_api_url', 'http://localhost:5000/api/au
                     <p>Inserisci le credenziali per accedere all area personale.</p>
                 </div>
 
-                <form id="ev-login-form" class="ev-login-form" method="post" novalidate data-api-endpoint="<?php echo esc_url($login_api_url); ?>">
+                <form id="ev-login-form" class="ev-login-form" method="post" novalidate data-api-endpoint="<?php echo esc_url($url_API); ?>" data-session-init-url="<?php echo esc_url($session_init_url); ?>">
                     <div class="ev-login-form__field">
-                        <label for="ev-login-username">Email o username</label>
-                        <input id="ev-login-username" name="username" type="text" autocomplete="username" required>
+                        <label for="ev-login-username">Email</label>
+                        <input id="ev-login-username" name="email" type="text" autocomplete="email" required>
                     </div>
 
                     <div class="ev-login-form__field">
@@ -37,8 +47,11 @@ $login_api_url = apply_filters('ev_login_api_url', 'http://localhost:5000/api/au
                     <button type="submit" class="ev-btn ev-btn--primary ev-login-form__submit">Accedi</button>
                 </form>
 
-                <p id="ev-login-feedback" class="ev-login-feedback" aria-live="polite"></p>
-                <p class="ev-login-feedback">Non hai un account? <a href="<?php echo esc_url(home_url('/registrati')); ?>">Registrati</a></p>
+                <p id="ev-login-feedback" class="ev-login-feedback" aria-live="polite" hidden></p>
+                <p class="ev-login-meta ev-login-meta--muted">
+                    <a href="<?php echo esc_url(home_url('/reset-password')); ?>">Hai dimenticato la password?</a>
+                </p>
+                <p class="ev-login-meta">Non hai un account? <a href="<?php echo esc_url(home_url('/registrati')); ?>">Registrati</a></p>
             </div>
         </section>
     </section>

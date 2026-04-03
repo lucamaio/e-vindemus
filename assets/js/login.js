@@ -5,35 +5,72 @@
         return;
     }
 
-    var apiEndpoint = form.getAttribute('data-api-endpoint') || '';
+    var apiEndpoint = form.getAttribute('data-api-endpoint') || '';  // URL API LOGIN
+    var sessionInitUrl = form.getAttribute('data-session-init-url') || '';
+
+    function setFeedback(message, type) {
+        var hasMessage = !!message;
+
+        feedback.hidden = !hasMessage;
+        feedback.textContent = message || '';
+        feedback.classList.remove('is-error', 'is-success', 'is-loading');
+
+        if (hasMessage && type) {
+            feedback.classList.add(type);
+        }
+    }
+
+    function submitSessionInit(payload) {
+        if (!sessionInitUrl) {
+            setFeedback('Pagina inizializzazione sessione non configurata.', 'is-error');
+            return;
+        }
+
+        var sessionForm = document.createElement('form');
+        sessionForm.method = 'post';
+        sessionForm.action = sessionInitUrl;
+        sessionForm.style.display = 'none';
+
+        Object.keys(payload).forEach(function (key) {
+            var input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = key;
+            input.value = payload[key];
+            sessionForm.appendChild(input);
+        });
+
+        document.body.appendChild(sessionForm);
+        sessionForm.submit();
+    }
 
     form.addEventListener('submit', function (event) {
         event.preventDefault();
 
-        var username = form.username ? form.username.value.trim() : '';
+        var email = form.email ? form.email.value.trim() : '';
         var password = form.password ? form.password.value : '';
 
-        if (!username || !password) {
-            feedback.textContent = 'Inserisci username e password.';
-            feedback.classList.add('is-error');
+        // DEBUG
+        // console.log(email);
+        // console.log(password);
+
+        if (!email || !password) {
+            setFeedback('Inserisci email e password.', 'is-error');
             return;
         }
-
-        feedback.classList.remove('is-error', 'is-success');
 
         if (!apiEndpoint) {
-            feedback.textContent = 'Endpoint API login non configurato.';
-            feedback.classList.add('is-error');
+            setFeedback('Endpoint API login non configurato.', 'is-error');
             return;
         }
+
+        setFeedback('Verifica credenziali in corso...', 'is-loading');
 
         fetch(apiEndpoint, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                username: username,
-                password: password,
-                remember: !!(form.remember && form.remember.checked)
+                email: email,
+                password: password
             })
         })
             .then(function (response) {
@@ -42,13 +79,24 @@
                 }
                 return response.json();
             })
-            .then(function () {
-                feedback.textContent = 'Accesso effettuato con successo.';
-                feedback.classList.add('is-success');
+            .then(function (data) {
+                var userId = data && data.user && data.user.id ? data.user.id : '';
+                var token = data && data.token ? data.token : '';
+
+                if (!userId || !token) {
+                    throw new Error('Risposta login non valida');
+                }
+
+                setFeedback('Accesso effettuato con successo. Ti stiamo reindirizzando...', 'is-success');
+                setTimeout(function () {
+                    submitSessionInit({
+                        user_id: userId,
+                        token: token
+                    });
+                }, 200);
             })
             .catch(function (error) {
-                feedback.textContent = error && error.message ? error.message : 'Accesso non riuscito.';
-                feedback.classList.add('is-error');
+                setFeedback(error && error.message ? error.message : 'Accesso non riuscito.', 'is-error');
             });
     });
 })();

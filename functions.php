@@ -337,6 +337,17 @@ function ev_ensure_all_products_page_exists() {
     $slug = 'tutti-prodotti';
     $page = get_page_by_path($slug);
 
+    if (
+        !$page instanceof WP_Post &&
+        function_exists('dci_find_existing_page_for_sync')
+    ) {
+        $page = dci_find_existing_page_for_sync([
+            'name'     => 'Tutti i prodotti',
+            'slug'     => $slug,
+            'template' => 'page-template/tutti-prodotti.php',
+        ]);
+    }
+
     if (!$page instanceof WP_Post) {
         $page_id = wp_insert_post([
             'post_type'   => 'page',
@@ -381,6 +392,26 @@ function ev_ensure_core_theme_pages_exist() {
             'slug'     => 'login',
             'template' => 'page-template/login.php',
         ],
+        [
+            'title'    => 'Inizializza Sessione',
+            'slug'     => 'inizializza-sessione',
+            'template' => 'page-template/crea-sessione.php',
+        ],
+        [
+            'title'    => 'Logout',
+            'slug'     => 'logout',
+            'template' => 'page-template/logout.php',
+        ],
+        [
+            'title'    => 'Reset Password',
+            'slug'     => 'reset-password',
+            'template' => 'page-template/reset-password.php',
+        ],
+        [
+            'title'    => 'Errori HTTP',
+            'slug'     => 'errori-http',
+            'template' => 'page-template/errori-http.php',
+        ],
     ];
 
     foreach ($required_pages as $page_data) {
@@ -390,6 +421,18 @@ function ev_ensure_core_theme_pages_exist() {
         }
 
         $page = get_page_by_path($page_data['slug']);
+
+        if (
+            !$page instanceof WP_Post &&
+            function_exists('dci_find_existing_page_for_sync')
+        ) {
+            $page = dci_find_existing_page_for_sync([
+                'name'     => $page_data['title'],
+                'slug'     => $page_data['slug'],
+                'template' => $page_data['template'],
+            ]);
+        }
+
         if (!$page instanceof WP_Post) {
             $page_id = wp_insert_post([
                 'post_type'   => 'page',
@@ -729,3 +772,51 @@ function ev_get_term_ids_with_children($taxonomy, $slug, $name = '') {
     $ids = array_merge([(int) $term->term_id], array_map('intval', $children));
     return array_values(array_unique($ids));
 }
+
+/**
+ * Registra i query var usati per la gestione degli errori HTTP custom.
+ *
+ * @param array<string> $vars Query vars disponibili.
+ * @return array<string>
+ */
+function ev_register_error_query_vars($vars) {
+    $vars[] = 'ev_http_error';
+    $vars[] = 'ev_http_error_code';
+
+    return $vars;
+}
+add_filter('query_vars', 'ev_register_error_query_vars');
+
+/**
+ * Gestisce la visualizzazione della pagina errori HTTP per codici 405, 500 e 503.
+ *
+ * URL esempio: /errori-http/?ev_http_error=503
+ *
+ * @return void
+ */
+function ev_handle_http_error_page_request() {
+    if (!is_page('errori-http')) {
+        return;
+    }
+
+    $requested_code = get_query_var('ev_http_error');
+    if ($requested_code === '') {
+        $requested_code = isset($_GET['ev_http_error']) ? sanitize_text_field(wp_unslash((string) $_GET['ev_http_error'])) : '';
+    }
+
+    if (!is_numeric($requested_code)) {
+        $requested_code = 500;
+    }
+
+    $requested_code = (int) $requested_code;
+    $allowed_codes = [405, 500, 503];
+
+    if (!in_array($requested_code, $allowed_codes, true)) {
+        $requested_code = 500;
+    }
+
+    status_header($requested_code);
+    nocache_headers();
+    set_query_var('ev_http_error_code', $requested_code);
+}
+add_action('template_redirect', 'ev_handle_http_error_page_request', 9);

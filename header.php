@@ -38,12 +38,43 @@ $ev_get_page_url = static function ($slug, $fallback = '#') {
     return $fallback;
 };
 
+$ev_is_logged_in = !empty($_SESSION['user_id']) && !empty($_SESSION['token']);
+$ev_login_url = $ev_get_page_url('login', wp_login_url());
+$ev_register_url = $ev_get_page_url('registrati', home_url('/registrati/'));
+$ev_profile_url = $ev_get_page_url('profilo', $ev_get_page_url('account', home_url('/')));
+$ev_logout_url = $ev_get_page_url('logout', home_url('/logout/'));
+
+$ev_account_dropdown_items = $ev_is_logged_in
+    ? [
+        [
+            'label' => 'Profilo',
+            'url'   => $ev_profile_url,
+            'icon'  => 'fa-regular fa-id-badge',
+        ],
+        [
+            'label' => 'Logout',
+            'url'   => $ev_logout_url,
+            'icon'  => 'fa-solid fa-right-from-bracket',
+        ],
+    ]
+    : [
+        [
+            'label' => 'Accedi',
+            'url'   => $ev_login_url,
+            'icon'  => 'fa-solid fa-right-to-bracket',
+        ],
+        [
+            'label' => 'Registrati',
+            'url'   => $ev_register_url,
+            'icon'  => 'fa-regular fa-user-plus',
+        ],
+    ];
+
 $ev_mobile_menu_links = [
     'Pokemon' => $ev_get_page_url('pokemon', home_url('/pokemon/')),
     'Abbigliamento' => $ev_get_page_url('abbigliamento', home_url('/abbigliamento/')),
     'Accessori' => $ev_get_page_url('accessori', home_url('/accessori/')),
     'Offerte' => $ev_get_page_url('offerte', home_url('/offerte/')),
-    'Account' => $ev_get_page_url('login', wp_login_url()),
     'Carrello' => $ev_get_page_url('carrello', home_url('/carrello/')),
 ];
 
@@ -52,12 +83,11 @@ $ev_mobile_menu_icons = [
     'Abbigliamento' => 'fa-solid fa-shirt',
     'Accessori' => 'fa-solid fa-gem',
     'Offerte' => 'fa-solid fa-tags',
-    'Account' => 'fa-regular fa-user',
     'Carrello' => 'fa-solid fa-cart-shopping',
 ];
 
 $ev_mobile_menu_shop_items = ['Pokemon', 'Abbigliamento', 'Accessori', 'Offerte'];
-$ev_mobile_menu_account_items = ['Account', 'Carrello'];
+$ev_mobile_menu_account_items = $ev_account_dropdown_items;
 
 $ev_search_filters = function_exists('ev_get_search_product_filters')
     ? ev_get_search_product_filters()
@@ -178,10 +208,29 @@ if (is_wp_error($ev_type_terms)) {
     </form>
 
     <nav class="ev-header__actions" aria-label="Azioni utente">
-      <a href="<?php echo esc_url($ev_mobile_menu_links['Account']); ?>" aria-label="Account">
-        <i class="fa-regular fa-user" aria-hidden="true"></i>
-        Account
-      </a>
+      <div class="ev-account-menu" data-ev-account-menu>
+        <button
+          type="button"
+          class="ev-account-menu__trigger"
+          aria-label="Apri menu account"
+          aria-expanded="false"
+          data-ev-account-trigger>
+          <span class="ev-account-menu__trigger-icon">
+            <i class="fa-regular fa-user" aria-hidden="true"></i>
+          </span>
+          <span>Account</span>
+          <i class="fa-solid fa-chevron-down ev-account-menu__chevron" aria-hidden="true"></i>
+        </button>
+
+        <div class="ev-account-menu__dropdown" hidden data-ev-account-dropdown>
+          <?php foreach ($ev_account_dropdown_items as $item) : ?>
+            <a class="ev-account-menu__item" href="<?php echo esc_url($item['url']); ?>">
+              <i class="<?php echo esc_attr($item['icon']); ?>" aria-hidden="true"></i>
+              <?php echo esc_html($item['label']); ?>
+            </a>
+          <?php endforeach; ?>
+        </div>
+      </div>
       <a href="<?php echo esc_url($ev_mobile_menu_links['Carrello']); ?>" aria-label="Carrello">
         <i class="fa-solid fa-cart-shopping" aria-hidden="true"></i>
         Carrello
@@ -258,21 +307,21 @@ if (is_wp_error($ev_type_terms)) {
           </button>
         </li>
 
-        <?php foreach ($ev_mobile_menu_account_items as $label) : ?>
-          <?php
-          if (!isset($ev_mobile_menu_links[$label])) {
-            continue;
-          }
-          $url = $ev_mobile_menu_links[$label];
-          $icon_class = isset($ev_mobile_menu_icons[$label]) ? $ev_mobile_menu_icons[$label] : 'fa-solid fa-circle';
-          ?>
+        <?php foreach ($ev_mobile_menu_account_items as $item) : ?>
           <li>
-            <a href="<?php echo esc_url($url); ?>">
-              <i class="<?php echo esc_attr($icon_class); ?>" aria-hidden="true"></i>
-              <?php echo esc_html($label); ?>
+            <a href="<?php echo esc_url($item['url']); ?>">
+              <i class="<?php echo esc_attr($item['icon']); ?>" aria-hidden="true"></i>
+              <?php echo esc_html($item['label']); ?>
             </a>
           </li>
         <?php endforeach; ?>
+
+        <li>
+          <a href="<?php echo esc_url($ev_mobile_menu_links['Carrello']); ?>">
+            <i class="<?php echo esc_attr($ev_mobile_menu_icons['Carrello']); ?>" aria-hidden="true"></i>
+            Carrello
+          </a>
+        </li>
       </ul>
     </nav>
   </aside>
@@ -285,6 +334,9 @@ if (is_wp_error($ev_type_terms)) {
     var drawer = document.getElementById('ev-mobile-drawer');
     var toggle = document.querySelector('[data-ev-menu-toggle]');
     var closers = document.querySelectorAll('[data-ev-menu-close]');
+    var accountMenu = document.querySelector('[data-ev-account-menu]');
+    var accountTrigger = document.querySelector('[data-ev-account-trigger]');
+    var accountDropdown = document.querySelector('[data-ev-account-dropdown]');
     var themeToggles = document.querySelectorAll('[data-ev-theme-toggle]');
     var themeLabels = document.querySelectorAll('[data-ev-theme-label]');
     var themeStorageKey = 'ev-theme-preference';
@@ -363,8 +415,40 @@ if (is_wp_error($ev_type_terms)) {
     }
 
     if (!drawer || !toggle) {
+      if (accountMenu && accountTrigger && accountDropdown) {
+        var setAccountMenuStateFallback = function (isOpen) {
+          accountMenu.classList.toggle('is-open', isOpen);
+          accountTrigger.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+
+          if (isOpen) {
+            accountDropdown.removeAttribute('hidden');
+          } else {
+            accountDropdown.setAttribute('hidden', 'hidden');
+          }
+        };
+
+        accountTrigger.addEventListener('click', function () {
+          setAccountMenuStateFallback(!accountMenu.classList.contains('is-open'));
+        });
+      }
+
       return;
     }
+
+    var setAccountMenuState = function (isOpen) {
+      if (!accountMenu || !accountTrigger || !accountDropdown) {
+        return;
+      }
+
+      accountMenu.classList.toggle('is-open', isOpen);
+      accountTrigger.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+
+      if (isOpen) {
+        accountDropdown.removeAttribute('hidden');
+      } else {
+        accountDropdown.setAttribute('hidden', 'hidden');
+      }
+    };
 
     var setMenuState = function (isOpen) {
       body.classList.toggle('ev-menu-open', isOpen);
@@ -401,13 +485,24 @@ if (is_wp_error($ev_type_terms)) {
         var isOpen = !filtersPanel.hasAttribute('hidden');
         setFiltersState(!isOpen);
       });
+    }
 
-      document.addEventListener('click', function (event) {
-        if (!searchForm.contains(event.target)) {
-          setFiltersState(false);
-        }
+    if (accountMenu && accountTrigger && accountDropdown) {
+      accountTrigger.addEventListener('click', function (event) {
+        event.stopPropagation();
+        setAccountMenuState(!accountMenu.classList.contains('is-open'));
       });
     }
+
+    document.addEventListener('click', function (event) {
+      if (accountMenu && !accountMenu.contains(event.target)) {
+        setAccountMenuState(false);
+      }
+
+      if (searchForm && !searchForm.contains(event.target)) {
+        setFiltersState(false);
+      }
+    });
 
     closers.forEach(function (closer) {
       closer.addEventListener('click', function () {
@@ -419,6 +514,7 @@ if (is_wp_error($ev_type_terms)) {
       if (event.key === 'Escape') {
         setMenuState(false);
         setFiltersState(false);
+        setAccountMenuState(false);
       }
     });
   })();

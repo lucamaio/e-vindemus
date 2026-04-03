@@ -7,32 +7,50 @@
 
     var apiEndpoint = form.getAttribute('data-api-endpoint') || '';
 
+    function setFeedback(message, type) {
+        var hasMessage = !!message;
+
+        feedback.hidden = !hasMessage;
+        feedback.textContent = message || '';
+        feedback.classList.remove('is-error', 'is-success', 'is-loading');
+
+        if (hasMessage && type) {
+            feedback.classList.add(type);
+        }
+    }
+
     form.addEventListener('submit', function (event) {
         event.preventDefault();
 
-        var username = form.username ? form.username.value.trim() : '';
+        var firstName = form.firstName ? form.firstName.value.trim() : '';
+        var lastName = form.lastName ? form.lastName.value.trim() : '';
         var email = form.email ? form.email.value.trim() : '';
         var password = form.password ? form.password.value : '';
 
-        if (!username || !email || !password) {
-            feedback.textContent = 'Compila nome utente, email e password.';
-            feedback.classList.add('is-error');
+        // Debug
+        // console.log(fristName);
+        // console.log(lastName);
+        // console.log(email);
+        // console.log(password);
+
+        if (!firstName || !lastName || !email || !password) {
+            setFeedback('Compila tutti i campi.', 'is-error');
             return;
         }
-
-        feedback.classList.remove('is-error', 'is-success');
 
         if (!apiEndpoint) {
-            feedback.textContent = 'Endpoint API registrazione non configurato.';
-            feedback.classList.add('is-error');
+            setFeedback('Endpoint API registrazione non configurato.', 'is-error');
             return;
         }
+
+        setFeedback('Creazione account in corso...', 'is-loading');
 
         fetch(apiEndpoint, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                username: username,
+                firstName: firstName,
+                lastName: lastName,
                 email: email,
                 password: password
             })
@@ -44,13 +62,11 @@
                 return response.json();
             })
             .then(function () {
-                feedback.textContent = 'Registrazione completata con successo.';
-                feedback.classList.add('is-success');
+                setFeedback('Registrazione completata con successo.', 'is-success');
                 form.reset();
             })
             .catch(function (error) {
-                feedback.textContent = error && error.message ? error.message : 'Errore durante la registrazione.';
-                feedback.classList.add('is-error');
+                setFeedback(error && error.message ? error.message : 'Errore durante la registrazione.', 'is-error');
             });
     });
 })();

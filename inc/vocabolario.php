@@ -102,6 +102,20 @@ if(!function_exists('dci_stati_prodotti_array')) {
     }
 }
 
+// Funzione per recuperare array di tipologie notizia
+if(!function_exists('dci_tipologie_notizia_array')) {
+    function dci_tipologie_notizia_array() {
+        $tipologie_notizia_array = [
+            "Notizia",
+            "Comunicato",
+            "Avvisso",
+            "Promozione"
+        ];
+
+        return $tipologie_notizia_array;
+    }
+}
+
 // Funzione per recuperare array di materiali abbigliamento
 if(!function_exists('dci_materiali_abbigliamento_array')) {
     function dci_materiali_abbigliamento_array() {
